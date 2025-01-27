@@ -1,0 +1,75 @@
+﻿@page "/logout"
+@using Microsoft.AspNetCore.Authentication
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+@implements IDisposable
+
+
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-content">
+            <div class="success-icon">
+                <div class="text-6xl text-[#e39a3c] mb-4 flex items-center justify-center">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <div class="success-circle"></div>
+            </div>
+            <div class="success-message">
+                <h1>Logged Out Successfully</h1>
+                <p class="message">Thank you for using our service. Have a great day!</p>
+                <p class="countdown">Redirecting to home in @_countdown seconds...</p>
+            </div>
+            <a class="home-button" @onclick="NavigateHome">
+                Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+    
+    private int _countdown = 5;
+    private Timer? _timer;
+    private bool _isNavigating = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (HttpContext != null)
+        {
+            await HttpContext.SignOutAsync();
+            StateHasChanged();
+        }
+        
+        _timer = new Timer(async _ =>
+        {
+            if (_isNavigating) return;
+            
+            _countdown--;
+            await InvokeAsync(StateHasChanged);
+            
+            if (_countdown <= 0)
+            {
+                await NavigateHome();
+            }
+        }, null, 0, 1000);
+    }
+
+    private async Task NavigateHome()
+    {
+        if (_isNavigating) return;
+        _isNavigating = true;
+        
+        _timer?.Dispose();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

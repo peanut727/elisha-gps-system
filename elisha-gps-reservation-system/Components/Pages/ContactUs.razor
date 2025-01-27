@@ -1,0 +1,170 @@
+﻿@page "/contact"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+
+
+<div class="min-h-screen bg-[#fafafa] relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-[#e39a3c]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-[#f8a532]/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="relative bg-gradient-to-r from-[#e39a3c] to-[#f8a532] text-white">
+        <div class="absolute inset-0 bg-black/10"></div>
+        <div class="relative container mx-auto px-4 py-32">
+            <div class="text-center max-w-3xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 animate__animated animate__fadeIn">
+                    Get in Touch
+                </h1>
+                <p class="text-xl md:text-2xl text-white/90 animate__animated animate__fadeIn animate__delay-1s leading-relaxed">
+                    Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="container mx-auto px-4 py-16 relative">
+        <div class="max-w-6xl mx-auto">
+            <!-- Contact Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div class="group perspective">
+                    <div class="bg-white backdrop-blur-lg bg-opacity-80 rounded-2xl p-8 shadow-lg transition-all duration-500 transform hover:scale-105 hover:shadow-2xl border border-white/20">
+                        <div class="w-20 h-20 bg-gradient-to-br from-[#e39a3c] to-[#f8a532] rounded-2xl flex items-center justify-center mx-auto mb-6 transform -rotate-6 group-hover:rotate-0 transition-transform duration-300">
+                            <i class="fas fa-map-marker-alt text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">Visit Us</h3>
+                        <p class="text-gray-600">123 Main Street, City, Country</p>
+                    </div>
+                </div>
+                <div class="group perspective">
+                    <div class="bg-white backdrop-blur-lg bg-opacity-80 rounded-2xl p-8 shadow-lg transition-all duration-500 transform hover:scale-105 hover:shadow-2xl border border-white/20">
+                        <div class="w-20 h-20 bg-gradient-to-br from-[#e39a3c] to-[#f8a532] rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-6 group-hover:rotate-0 transition-transform duration-300">
+                            <i class="fas fa-phone text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">Call Us</h3>
+                        <p class="text-gray-600">+1 234 567 8900</p>
+                    </div>
+                </div>
+                <div class="group perspective">
+                    <div class="bg-white backdrop-blur-lg bg-opacity-80 rounded-2xl p-8 shadow-lg transition-all duration-500 transform hover:scale-105 hover:shadow-2xl border border-white/20">
+                        <div class="w-20 h-20 bg-gradient-to-br from-[#e39a3c] to-[#f8a532] rounded-2xl flex items-center justify-center mx-auto mb-6 transform -rotate-6 group-hover:rotate-0 transition-transform duration-300">
+                            <i class="fas fa-envelope text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">Email Us</h3>
+                        <p class="text-gray-600">info@example.com</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map and Form Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300">
+                    <iframe class="w-full h-[500px]" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387193.30596073366!2d-74.25986548248684!3d40.69714941932609!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1644238772261!5m2!1sen!2s"
+                            style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+                <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+                    <h2 class="text-3xl font-bold mb-8 text-gray-800">Send us a Message</h2>
+                    <EditForm Model="@contactForm" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="mb-6 text-red-600" />
+
+                        <div class="space-y-6">
+                            <div class="relative group">
+                                <InputText id="name" class="w-full px-6 py-4 rounded-xl border-2 border-gray-200 focus:border-[#e39a3c] outline-none transition-all bg-white/50 backdrop-blur-sm group-hover:border-[#e39a3c]/50" 
+                                         placeholder="Your Name" @bind-Value="contactForm.Name" />
+                                <ValidationMessage For="@(() => contactForm.Name)" class="mt-2 text-sm text-red-600" />
+                            </div>
+
+                            <div class="relative group">
+                                <InputText id="email" class="w-full px-6 py-4 rounded-xl border-2 border-gray-200 focus:border-[#e39a3c] outline-none transition-all bg-white/50 backdrop-blur-sm group-hover:border-[#e39a3c]/50" 
+                                         placeholder="Your Email" @bind-Value="contactForm.Email" />
+                                <ValidationMessage For="@(() => contactForm.Email)" class="mt-2 text-sm text-red-600" />
+                            </div>
+
+                            <div class="relative group">
+                                <InputText id="subject" class="w-full px-6 py-4 rounded-xl border-2 border-gray-200 focus:border-[#e39a3c] outline-none transition-all bg-white/50 backdrop-blur-sm group-hover:border-[#e39a3c]/50" 
+                                         placeholder="Subject" @bind-Value="contactForm.Subject" />
+                                <ValidationMessage For="@(() => contactForm.Subject)" class="mt-2 text-sm text-red-600" />
+                            </div>
+
+                            <div class="relative group">
+                                <InputTextArea id="message" class="w-full px-6 py-4 rounded-xl border-2 border-gray-200 focus:border-[#e39a3c] outline-none transition-all bg-white/50 backdrop-blur-sm group-hover:border-[#e39a3c]/50" 
+                                             placeholder="Your Message" @bind-Value="contactForm.Message" rows="5" />
+                                <ValidationMessage For="@(() => contactForm.Message)" class="mt-2 text-sm text-red-600" />
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-[#e39a3c] to-[#f8a532] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="inline-flex items-center">
+                                        <span class="w-5 h-5 mr-3 border-3 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        Sending...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-paper-plane mr-3"></i>
+                                        Send Message
+                                    </span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    @if (showSuccessMessage)
+                    {
+                        <div class="mt-6 bg-green-50 border-2 border-green-500/20 text-green-700 px-6 py-4 rounded-xl flex items-center animate__animated animate__fadeIn backdrop-blur-sm">
+                            <i class="fas fa-check-circle text-xl mr-3"></i>
+                            <span>Thank you for your message! We'll get back to you soon.</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ContactFormModel contactForm = new();
+    private bool isSubmitting = false;
+    private bool showSuccessMessage = false;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            // Add your form submission logic here
+            await Task.Delay(1000); // Simulated delay
+            showSuccessMessage = true;
+            contactForm = new(); // Reset form
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class ContactFormModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Subject is required")]
+        public string Subject { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Message is required")]
+        [MinLength(10, ErrorMessage = "Message must be at least 10 characters")]
+        public string Message { get; set; } = string.Empty;
+    }
+}

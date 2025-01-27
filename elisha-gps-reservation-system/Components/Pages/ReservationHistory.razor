@@ -1,0 +1,353 @@
+@page "/reservation-history"
+@attribute [Authorize]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject IHttpContextAccessor HttpContextAccessor
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@rendermode InteractiveServer
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            DEFAULT: '#e39a3c',
+            50: '#fdf8f1',
+            100: '#fbecd9',
+            200: '#f6d4a8',
+            300: '#f0b671',
+            400: '#e39a3c',
+            500: '#d78023',
+          }
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+    @@keyframes kenburns {
+        0% {
+            transform: scale(1) translate(0, 0);
+        }
+        50% {
+            transform: scale(1.1) translate(-1%, -1%);
+        }
+        100% {
+            transform: scale(1) translate(0, 0);
+        }
+    }
+
+    @@keyframes fade-in-down {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="min-h-screen bg-gray-50 font-jakarta">
+    <!-- Hero Section with Background --> 
+    <div class="relative overflow-hidden bg-white">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/40"></div>
+            <img src="Images/headerpic.jpg" 
+                 class="w-full h-full object-cover scale-105 transform motion-safe:animate-[kenburns_20s_ease-in-out_infinite] filter brightness-75 blur-[2px]" 
+                 alt="Hero background"
+                 style="animation: kenburns 20s ease-in-out infinite;">
+        </div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32 text-center">
+            <div class="space-y-8 motion-safe:animate-fade-in-down">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight flex flex-wrap items-center justify-center gap-x-4">
+                    <span class="inline-block transform hover:scale-105 transition-transform duration-300">Elisha's</span>
+                    <span class="inline-block text-[#f3b755] transform hover:scale-105 transition-transform duration-300">Motorcycle Rental</span>
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Reservation History</h1>
+            <p class="mt-2 text-gray-600">Track all your past and upcoming reservations</p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col justify-center items-center min-h-[200px] space-y-4">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                <p class="text-gray-600 animate-pulse">Fetching your reservations...</p>
+            </div>
+        }
+        else if (!reservations.Any())
+        {
+            <div class="text-center py-12 bg-primary-50 rounded-lg border border-primary-100">
+                <img src="Images/empty-calendar.svg" alt="No reservations" class="w-32 h-32 mx-auto mb-6 opacity-75"/>
+                <i class="fas fa-calendar-times text-4xl text-[#f3b755] mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">No Reservations Found</h3>
+                <p class="text-gray-600 mb-6">Start your journey by booking your first vehicle rental!</p>
+                <a href="/vehicles" 
+                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#f3b755] hover:bg-[#e3a745] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#f3b755] transition-all duration-300">
+                    <i class="fas fa-motorcycle mr-2"></i>
+                    Browse Vehicles
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-primary-400"></i>
+                    </div>
+                    <input type="text" 
+                           aria-label="Search reservations"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                           placeholder="Search by vehicle name..."
+                           @bind="searchTerm" 
+                           @oninput="OnSearchInput" />
+                </div>
+                <div class="w-full sm:w-48">
+                    <select @bind="selectedStatus" 
+                            aria-label="Filter by status"
+                            class="@($"block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md {GetStatusTextClass(selectedStatus)}")">
+                        <option value="All" class="text-gray-800 bg-white">All Status (@reservations.Count())</option>
+                        <option value="Pending" class="text-yellow-800 bg-yellow-50">Pending (@reservations.Count(r => r.Status == "Pending"))</option>
+                        <option value="Confirmed" class="text-green-800 bg-green-50">Confirmed (@reservations.Count(r => r.Status == "Confirmed"))</option>
+                        <option value="Cancelled" class="text-red-800 bg-red-50">Cancelled (@reservations.Count(r => r.Status == "Cancelled"))</option>
+                        <option value="Completed" class="text-blue-800 bg-blue-50">Completed (@reservations.Count(r => r.Status == "Completed"))</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (!FilteredReservations.Any())
+            {
+                <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No reservations match your search criteria</p>
+                </div>
+            }
+            else
+            {
+                <div class="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    @foreach (var reservation in FilteredReservations)
+                    {
+                        var vehicle = vehicles.FirstOrDefault(v => v.id == reservation.VehicleId);
+                        var totalDays = (reservation.EndDate - reservation.StartDate).Days + 1;
+                        var pricePerDay = GetVehiclePrice(reservation.VehicleId);
+                        var totalPrice = pricePerDay.GetValueOrDefault() * totalDays;
+
+                        <div class="relative bg-white rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary-200" tabindex="0">
+                            <!-- Status Badge -->
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="@GetStatusBadgeClass(reservation.Status) px-4 py-1.5 rounded-full text-sm font-semibold inline-flex items-center shadow-lg"
+                                      role="status">
+                                    <span class="w-2 h-2 rounded-full bg-current mr-2"></span>
+                                    @reservation.Status
+                                </span>
+                            </div>
+
+                            <!-- Header with Vehicle Name -->
+                            <div class="relative px-6 pt-14 pb-4">
+                                <div class="absolute inset-0 bg-gradient-to-br from-primary-100/50 to-transparent"></div>
+                                <h3 class="relative text-xl font-bold text-primary-800 mb-2">@GetVehicleName(reservation.VehicleId)</h3>
+                            </div>
+
+                            <!-- Main Content -->
+                            <div class="p-6 space-y-6">
+                                <!-- Dates Section -->
+                                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50">
+                                    <div class="text-center">
+                                        <p class="text-sm font-medium text-gray-500 mb-1">From</p>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-calendar-alt text-primary-400"></i>
+                                            <p class="font-semibold text-gray-800">@FormatDate(reservation.StartDate)</p>
+                                        </div>
+                                    </div>
+                                    <div class="h-8 w-px bg-gray-200"></div>
+                                    <div class="text-center">
+                                        <p class="text-sm font-medium text-gray-500 mb-1">To</p>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-calendar-check text-primary-400"></i>
+                                            <p class="font-semibold text-gray-800">@FormatDate(reservation.EndDate)</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Price Section -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-dollar-sign text-primary-400"></i>
+                                            <span class="text-sm font-medium text-gray-500">Price Per Day</span>
+                                        </div>
+                                        <span class="font-semibold text-gray-800">@(pricePerDay.HasValue ? $"₱{pricePerDay:N2}" : "N/A")</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-primary-50">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-money-bill-wave text-primary-400"></i>
+                                            <span class="text-sm font-medium text-gray-500">Total Price</span>
+                                        </div>
+                                        <span class="font-bold text-primary-600 text-lg">@($"₱{totalPrice:N2}")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (reservation.Status == "Pending")
+                            {
+                                <div class="px-6 pb-6">
+                                    <button class="w-full inline-flex justify-center items-center px-4 py-3 text-sm font-medium rounded-xl text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-sm hover:shadow-md"
+                                            @onclick="() => CancelReservation(reservation.ReservationId)">
+                                        <i class="fas fa-times mr-2"></i> Cancel Reservation
+                                    </button>
+                                </div>
+                            }
+
+                            <!-- Card Border Effect -->
+                            <div class="absolute inset-0 border-2 border-transparent rounded-2xl group-hover:border-primary-200 transition-colors duration-300"></div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<ReservationModel> reservations = new();
+    private List<Vehicle> vehicles = new();
+    private string searchTerm = "";
+    private string debouncedSearchTerm = "";
+    private string selectedStatus = "All";
+    private bool isLoading = true;
+    private System.Timers.Timer? debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        debounceTimer = new System.Timers.Timer(300);
+        debounceTimer.Elapsed += async (sender, e) =>
+        {
+            await InvokeAsync(() =>
+            {
+                debouncedSearchTerm = searchTerm;
+                StateHasChanged();
+            });
+        };
+        debounceTimer.AutoReset = false;
+
+        await LoadReservations();
+    }
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-yellow-100 text-yellow-800",
+        "Confirmed" => "bg-green-100 text-green-800",
+        "Cancelled" => "bg-red-100 text-red-800",
+        "Completed" => "bg-blue-100 text-blue-800",
+        _ => "bg-gray-100 text-gray-800"
+    };
+
+    private string GetStatusTextClass(string status) => status switch
+    {
+        "Pending" => "text-yellow-800",
+        "Confirmed" => "text-green-800",
+        "Cancelled" => "text-red-800",
+        "Completed" => "text-blue-800",
+        _ => "text-gray-800"
+    };
+
+    private IEnumerable<ReservationModel> FilteredReservations =>
+        reservations.Where(r =>
+            (string.IsNullOrEmpty(debouncedSearchTerm) ||
+             GetVehicleName(r.VehicleId).Contains(debouncedSearchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (selectedStatus == "All" || r.Status == selectedStatus));
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        debounceTimer?.Stop();
+        debounceTimer?.Start();
+    }
+
+    public void Dispose()
+    {
+        debounceTimer?.Dispose();
+    }
+
+    private async Task LoadReservations()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var userId = HttpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                reservations = await context.Reservation
+                    .Where(r => r.UserId == int.Parse(userId))
+                    .OrderByDescending(r => r.StartDate)
+                    .ToListAsync();
+
+                var vehicleIds = reservations.Select(r => r.VehicleId).Distinct();
+                vehicles = await context.Vehicles
+                    .Where(v => vehicleIds.Contains(v.id))
+                    .ToListAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetVehicleName(int vehicleId)
+    {
+        var vehicle = vehicles.FirstOrDefault(v => v.id == vehicleId);
+        return vehicle?.name ?? "Unknown Vehicle";
+    }
+
+    private decimal? GetVehiclePrice(int vehicleId)
+    {
+        var vehicle = vehicles.FirstOrDefault(v => v.id == vehicleId);
+        return vehicle?.price_per_day;
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        return date.ToString("MMM. dd. yyyy");
+    }
+
+    private async Task CancelReservation(int reservationId)
+    {
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var reservation = await context.Reservation.FindAsync(reservationId);
+            
+            if (reservation != null && reservation.Status == "Pending")
+            {
+                reservation.Status = "Cancelled";
+                await context.SaveChangesAsync();
+                await LoadReservations(); // Reload the reservations
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cancelling reservation: {ex.Message}");
+        }
+    }
+}

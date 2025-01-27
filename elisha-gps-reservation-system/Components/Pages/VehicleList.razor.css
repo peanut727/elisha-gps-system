@@ -1,0 +1,233 @@
+@font-face {
+    font-family: "Inter";
+    src: url("font/interVariable.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Jakarta";
+    src: url('font/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+    font-display: swap;
+}
+
+.container-all {
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+.section-header {
+    text-align: center;
+    margin: 60px 0 40px;
+    position: relative;
+}
+
+.popular-item {
+    display: inline-block;
+    color: #52647d;
+    font-size: 1.5rem;
+    font-weight: 700;
+    position: relative;
+    margin: 0;
+    padding-bottom: 15px;
+}
+
+.popular-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, #F4B554, #f8a532);
+    border-radius: 2px;
+}
+
+.popular-item::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(244, 181, 84, 0.3);
+    border-radius: 2px;
+}
+
+.vehicle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.vehicle-item {
+    background: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(244, 181, 84, 0.1);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    font-family: Inter, serif;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.vehicle-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(244, 181, 84, 0.2);
+}
+
+.vehicle-name-type {
+    margin-bottom: 25px;
+}
+
+.vehicle-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.vehicle-type {
+    color: #666;
+    font-size: 1rem;
+    margin: 5px 0 15px;
+    padding-bottom: 15px;
+    
+}
+
+.vehicle-img {
+    position: relative;
+    margin: -15px -20px 20px;
+    padding: 12px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.vehicle-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.5s ease;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+}
+
+.vehicle-item:hover .vehicle-img img {
+    transform: scale(1.08) translateY(-5px);
+}
+
+.vehicle-specs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding: 0 10px;
+}
+
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.spec-item i {
+    font-size: 1.3rem;
+    color: #F4B554;
+    text-shadow: 0 2px 4px rgba(244, 181, 84, 0.2);
+}
+
+.spec-item p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.price-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.price {
+    display: flex;
+    flex-direction: column;
+}
+
+.price span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.price-amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.price-amount .currency {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.price-amount span:last-child {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+}
+
+.rent-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #F4B554, #f8a532);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(244, 181, 84, 0.3);
+}
+
+.rent-btn:hover {
+    background: linear-gradient(135deg, #f8a532, #F4B554);
+    transform: translateX(5px);
+    box-shadow: 0 6px 20px rgba(244, 181, 84, 0.4);
+}
+
+.rent-btn i {
+    transition: transform 0.3s ease;
+}
+
+.rent-btn:hover i {
+    transform: translateX(3px);
+}
+
+@media (min-width: 1400px) {
+    .vehicle {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .container-all {
+        margin-left: 5%;
+        margin-right: 5%;
+    }
+    
+    .vehicle {
+        grid-template-columns: 1fr;
+    }
+}

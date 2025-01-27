@@ -1,0 +1,25 @@
+﻿@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@page "/"
+
+@code {
+    protected override void OnInitialized()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user != null)
+        {
+            if (user.IsInRole("Admin"))
+            {
+                NavigationManager.NavigateTo("/adminDashboard");
+            }
+            else if (user.IsInRole("Customer"))
+            {
+                NavigationManager.NavigateTo("/home");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/home");
+            }
+        }
+    }
+}

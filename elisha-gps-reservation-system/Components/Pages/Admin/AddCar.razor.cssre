@@ -1,0 +1,551 @@
+@font-face {
+    font-family: "Inter";
+    src: url("font/interVariable.ttf") format("truetype");
+}
+@font-face {
+    font-family: "Jakarta";
+    src: url('font/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+    font-display: swap;
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2.5rem;
+    font-family: Jakarta, sans-serif;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.content-container h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.content-container h3::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: #e39a3c;
+    border-radius: 2px;
+}
+
+.btn-group {
+    display: inline-flex;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.btn-group .btn {
+    padding: 0.875rem 1.75rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    background-color: transparent;
+    color: #4a5568;
+}
+
+.btn-group .btn:hover {
+    background-color: #e39a3c;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 154, 60, 0.2);
+}
+
+.btn-group .btn.active {
+    background-color: #e39a3c;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(227, 154, 60, 0.2);
+}
+
+/* Form Container */
+.mt-4 {
+    background-color: #f8f9fa;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.mt-4 h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 2rem;
+}
+
+/* Form Layout */
+form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Form Fields */
+form > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Full-width fields */
+form > div:nth-child(7),
+form > div:nth-child(8) {
+    grid-column: 1 / -1;
+}
+
+/* Labels */
+label {
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.925rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Form Controls */
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+    color: #2d3748;
+}
+
+.form-control:focus {
+    border-color: #e39a3c;
+    box-shadow: 0 0 0 3px rgba(227, 154, 60, 0.1);
+    outline: none;
+}
+
+.form-control:hover {
+    border-color: #cbd5e0;
+}
+
+/* Textarea specific */
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Select specific */
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+/* Submit Button */
+button[type="submit"] {
+    grid-column: 1 / -1;
+    background-color: #e39a3c;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+    background-color: #d38a2c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 154, 60, 0.2);
+}
+
+/* Validation Summary */
+.validation-summary {
+    grid-column: 1 / -1;
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #c53030;
+    margin-bottom: 1.5rem;
+}
+
+/* Vehicle List */
+.list-group {
+    display: grid;
+    gap: 1rem;
+    padding: 0;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-danger {
+    background-color: #fc8181;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #f56565;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(252, 129, 129, 0.2);
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    font-family: Jakarta, sans-serif;
+}
+
+.modal-header {
+    border-bottom: 2px solid #f8f9fa;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-header .modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.modal-header .btn-close {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.modal-header .btn-close:hover {
+    background-color: #e2e8f0;
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 2rem 1.5rem;
+}
+
+.modal-body p {
+    color: #4a5568;
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: center;
+}
+
+.modal-footer {
+    border-top: 2px solid #f8f9fa;
+    padding: 1.25rem 1.5rem;
+    background-color: #ffffff;
+    border-radius: 0 0 20px 20px;
+}
+
+.modal-footer .btn-primary {
+    background-color: #e39a3c;
+    border: none;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-footer .btn-primary:hover {
+    background-color: #d38a2c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 154, 60, 0.2);
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+    backdrop-filter: blur(4px);
+}
+
+/* Modal Animation */
+.modal.fade.show {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .content-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    form {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-group {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-container h3 {
+        font-size: 1.5rem;
+    }
+    
+    .mt-4 {
+        padding: 1.5rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .list-group-item {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-content {
+        border-radius: 16px;
+    }
+    
+    .modal-header {
+        padding: 1.25rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem 1.25rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.25rem;
+    }
+}
+
+/* Vehicle Edit List Styles */
+.vehicle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.vehicle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.vehicle-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.vehicle-name {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.vehicle-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.vehicle-status.available {
+    background-color: #C6F6D5;
+    color: #22543D;
+}
+
+.vehicle-status.reserved {
+    background-color: #FED7D7;
+    color: #822727;
+}
+
+.vehicle-status.pending {
+    background-color: #FEEBC8;
+    color: #744210;
+}
+
+.vehicle-status.maintenance {
+    background-color: #E9D8FD;
+    color: #553C9A;
+}
+
+.vehicle-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-select {
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4a5568;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-select:hover {
+    border-color: #e39a3c;
+}
+
+.status-select:focus {
+    border-color: #e39a3c;
+    box-shadow: 0 0 0 3px rgba(227, 154, 60, 0.1);
+    outline: none;
+}
+
+/* Edit Success Modal */
+.modal-content.edit-success {
+    border-left: 4px solid #48BB78;
+}
+
+@media (max-width: 768px) {
+    .vehicle-item {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .vehicle-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .vehicle-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .status-select {
+        width: 100%;
+    }
+}
+
+/* Delete Confirmation Modal Styles */
+.modal-content.delete-confirmation {
+    border-left: 4px solid #F56565;
+}
+
+.delete-confirmation .modal-header {
+    border-bottom-color: #FED7D7;
+}
+
+.delete-confirmation .modal-footer {
+    border-top-color: #FED7D7;
+}
+
+.vehicle-details {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #F7FAFC;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.delete-confirmation .btn-danger {
+    background-color: #F56565;
+    border: none;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-confirmation .btn-danger:hover {
+    background-color: #E53E3E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.2);
+}
+
+.delete-confirmation .btn-secondary {
+    background-color: #EDF2F7;
+    border: none;
+    color: #4A5568;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-confirmation .btn-secondary:hover {
+    background-color: #E2E8F0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

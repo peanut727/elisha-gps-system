@@ -1,0 +1,172 @@
+﻿@page "/geolocation"
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+@using elisha_gps_reservation_system.Components.Layout
+@layout EmptyLayout
+@rendermode InteractiveServer
+
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">GPS Location Service</h3>
+                <div class="flex items-center space-x-2">
+                    <span class="@(_isTracking ? "bg-green-500" : "bg-gray-400") w-3 h-3 rounded-full animate-pulse"></span>
+                    <span class="@(_isTracking ? "text-green-700" : "text-gray-600") text-sm font-medium">
+                        @(_isTracking ? "Active" : "Inactive")
+                    </span>
+                </div>
+            </div>
+            
+            <div class="flex justify-center mb-6">
+                <button @onclick="ToggleTracking"
+                        class="@(_isTracking ? 
+                            "bg-red-500 hover:bg-red-600 focus:ring-red-500" : 
+                            "bg-blue-500 hover:bg-blue-600 focus:ring-blue-500") 
+                         inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg 
+                         text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         class="@(_isTracking ? "animate-pulse" : "") h-5 w-5 mr-2" 
+                         fill="none" 
+                         viewBox="0 0 24 24" 
+                         stroke="currentColor">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="@(_isTracking ? "M21 12a9 9 0 11-18 0 9 9 0 0118 0z M15 12a3 3 0 11-6 0 3 3 0 016 0z" : "M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z")" />
+                    </svg>
+                    @(_isTracking ? "Stop GPS Service" : "Start GPS Service")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">@_errorMessage</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (_isTracking)
+            {
+                <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                GPS service is running. Location data is being sent to the admin dashboard.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _isTracking = false;
+    private string _errorMessage = "";
+    private DotNetObjectReference<Geolocation> _objRef;
+    private IJSObjectReference _module;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _objRef = DotNetObjectReference.Create(this);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/geolocation.js");
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Error initializing GPS module: {ex.Message}";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ToggleTracking()
+    {
+        try
+        {
+            if (_module == null)
+            {
+                _errorMessage = "GPS module not initialized. Please wait or refresh the page.";
+                return;
+            }
+
+            if (!_isTracking)
+            {
+                await _module.InvokeVoidAsync("startLocationTracking", _objRef);
+            }
+            else
+            {
+                await _module.InvokeVoidAsync("stopLocationTracking", _objRef);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"GPS Error: {ex.Message}";
+            _isTracking = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateTrackingStatus(bool isTracking)
+    {
+        _isTracking = isTracking;
+        if (isTracking)
+        {
+            _errorMessage = "";
+        }
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnError(string message)
+    {
+        _errorMessage = $"GPS Error: {message}";
+        _isTracking = false;
+        StateHasChanged();
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (_module != null)
+        {
+            try
+            {
+                if (_isTracking)
+                {
+                    await _module.InvokeVoidAsync("stopLocationTracking", _objRef);
+                }
+                await _module.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error during disposal: {ex.Message}");
+            }
+        }
+        
+        _objRef?.Dispose();
+    }
+}

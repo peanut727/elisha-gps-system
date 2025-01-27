@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/elisha-gps-reservation-system.props" />
+</Project>

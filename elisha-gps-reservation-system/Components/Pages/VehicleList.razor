@@ -1,0 +1,204 @@
+﻿@page "/vehicles"
+@rendermode InteractiveServer
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<div class="min-h-screen bg-gray-50 font-jakarta">
+    <!-- Hero Section -->
+    <div class="relative h-[40vh] overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-br from-black/70 to-[#f3b755]/30"></div>
+            <img src="Images/headerpic.jpg" 
+                 class="w-full h-full object-cover scale-105 transform motion-safe:animate-[kenburns_20s_ease-in-out_infinite] filter blur-[2px] brightness-75" 
+                 alt="Vehicles hero">
+        </div>
+        
+        <div class="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight">
+                Our Vehicle Fleet
+            </h1>
+            <p class="text-xl text-white/90 max-w-2xl leading-relaxed">
+                Choose from our selection of premium vehicles
+            </p>
+        </div>
+    </div>
+
+    <!-- Vehicle Categories -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        @if (isLoading)
+        {
+            <div class="flex justify-center items-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f3b755]"></div>
+            </div>
+        }
+        else
+        {
+            <!-- Category Tabs -->
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                @foreach (var category in categories)
+                {
+                    <button @onclick="() => SetActiveCategory(category)"
+                            class="@($"px-6 py-3 rounded-full font-bold transition-all duration-300 {(activeCategory == category ? "bg-[#f3b755] text-white" : "bg-white text-gray-600 hover:bg-gray-100")} shadow-md")">
+                        @category
+                    </button>
+                }
+            </div>
+
+            <!-- Vehicle Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach (var vehicle in FilteredVehicles)
+                {
+                    <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                        <!-- Price Tag -->
+                        <div class="relative">
+                            <div class="absolute top-4 right-4 z-10">
+                                <div class="bg-[#f3b755] backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+                                    <span class="text-white text-2xl font-bold">₱@vehicle.price_per_day</span>
+                                    <span class="text-white/80 text-sm">/day</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Container -->
+                            <div class="h-64 overflow-hidden">
+                                <img src="@vehicle.imgsrc" alt="@vehicle.name"
+                                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"/>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-6">
+                            <!-- Vehicle Type Badge -->
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#f3b755]/10 text-[#f3b755] mb-4">
+                                @vehicle.type
+                            </span>
+
+                            <!-- Title and Rating -->
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">@vehicle.name</h3>
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span class="ml-1 text-sm font-medium text-gray-600">@(vehicleRatings.GetValueOrDefault(vehicle.id, 0))</span>
+                                </div>
+                            </div>
+
+                            <!-- Features Grid -->
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i class="fas fa-users text-[#f3b755]"></i>
+                                    <span class="text-sm">@vehicle.capacity Seats</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i class="fas fa-gauge text-[#f3b755]"></i>
+                                    <span class="text-sm">@vehicle.mileage KM/day</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i class="fas fa-cog text-[#f3b755]"></i>
+                                    <span class="text-sm">@vehicle.transmission</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i class="fas fa-calendar text-[#f3b755]"></i>
+                                    @if (vehicleAvailability.GetValueOrDefault(vehicle.id, true))
+                                    {
+                                        <span class="text-sm text-green-600">Available Now</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm text-red-600">Reserved Today</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <button @onclick="@(() => NavigateToDetails(vehicle.id))"
+                                    class="w-full bg-[#f3b755] text-white px-6 py-3 rounded-xl font-bold
+                                           hover:bg-white hover:!text-[#f3b755] transform hover:scale-105 
+                                           transition-all duration-300 shadow-md">
+                                <span class="transition-colors duration-300">Rent Now</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Vehicle> vehicles = new List<Vehicle>();
+    private Dictionary<int, double> vehicleRatings = new();
+    private Dictionary<int, bool> vehicleAvailability = new();
+    private bool isLoading = true;
+    private string activeCategory = "All";
+    private List<string> categories = new List<string> { "All", "Big Bike", "Scooter", "Sedan" };
+
+    private IEnumerable<Vehicle> FilteredVehicles => 
+        activeCategory == "All" 
+            ? vehicles 
+            : vehicles.Where(v => v.type.Equals(activeCategory, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehicles();
+        
+        // Pre-load all ratings and availability
+        foreach (var vehicle in vehicles)
+        {
+            vehicleRatings[vehicle.id] = await GetAverageReviewForVehicle(vehicle.id);
+            vehicleAvailability[vehicle.id] = await IsVehicleAvailableToday(vehicle.id);
+        }
+    }
+
+    private void SetActiveCategory(string category)
+    {
+        activeCategory = category;
+    }
+
+    private async Task LoadVehicles()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            vehicles = await context.Vehicles.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading vehicles: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<double> GetAverageReviewForVehicle(int vehicleId)
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var reviews = await context.VehicleReviews
+            .Where(r => r.VehicleId == vehicleId)
+            .ToListAsync();
+
+        return reviews.Any() ? Math.Round(reviews.Average(r => r.Rating), 1) : 0;
+    }
+
+    private async Task<bool> IsVehicleAvailableToday(int vehicleId)
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        
+        return !await context.Reservation
+            .AnyAsync(r => r.VehicleId == vehicleId && 
+                          DateOnly.FromDateTime(r.StartDate) <= today && 
+                          DateOnly.FromDateTime(r.EndDate) >= today);
+    }
+
+    private void NavigateToDetails(int vehicleId)
+    {
+        Navigation.NavigateTo($"/details/{vehicleId}");
+    }
+}

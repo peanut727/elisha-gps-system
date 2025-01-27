@@ -1,0 +1,21 @@
+﻿@page "/access-denied"
+@using elisha_gps_reservation_system.Components.Layout
+@layout EmptyLayout
+
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-content">
+            <div class="success-icon">
+                <img src="Images/denied.png" alt="Access Denied" class="bounce-in"/>
+                <div class="success-circle"></div>
+            </div>
+            <div class="success-message">
+                <h1>Access Denied</h1>
+                <p class="message">You don't have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+            </div>
+            <NavLink class="home-button" href="/">
+                Return to Home
+            </NavLink>
+        </div>
+    </div>
+</div>

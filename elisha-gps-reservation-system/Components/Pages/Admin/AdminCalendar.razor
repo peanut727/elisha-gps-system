@@ -1,0 +1,401 @@
+﻿@page "/calendar"
+@rendermode InteractiveServer
+@inject ApplicationDbContext DbContext
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="admin-calendar-container">
+    <div class="calendar-header">
+        <h1>Reservation Calendar</h1>
+        <div class="controls-wrapper">
+            <div class="toggle-wrapper">
+                <label class="toggle-switch">
+                    <input type="checkbox" @bind="showPastReservations">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Show Past Reservations</span>
+            </div>
+            <div class="vehicle-selector">
+                <select value="@selectedVehicleId" @onchange="OnVehicleSelectionChanged">
+                    <option value="0">All Vehicles</option>
+                    @foreach (var vehicle in vehicles)
+                    {
+                        <option value="@vehicle.id">@vehicle.name</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="calendar-content">
+        <div class="availability-section">
+            <div class="section-header">
+                <h2>Availability Calendar</h2>
+                <div class="legend">
+                    <span class="legend-item available">
+                        <i class="fas fa-square"></i> Available
+                    </span>
+                    <span class="legend-item pending">
+                        <i class="fas fa-square"></i> Pending
+                    </span>
+                    <span class="legend-item reserved">
+                        <i class="fas fa-square"></i> Reserved
+                    </span>
+                    <span class="legend-item past">
+                        <i class="fas fa-square"></i> Past
+                    </span>
+                </div>
+            </div>
+
+            <div class="calendar-wrapper">
+                <div class="calendar-nav">
+                    <button @onclick="ShowPreviousMonth" 
+                            class="nav-button">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="current-month">@CurrentMonthYear</span>
+                    <button @onclick="ShowNextMonth"
+                            class="nav-button">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="calendar">
+                    <div class="weekdays">
+                        <div class="weekday">Sun</div>
+                        <div class="weekday">Mon</div>
+                        <div class="weekday">Tue</div>
+                        <div class="weekday">Wed</div>
+                        <div class="weekday">Thu</div>
+                        <div class="weekday">Fri</div>
+                        <div class="weekday">Sat</div>
+                    </div>
+
+                    <div class="days">
+                        @foreach (var day in CalendarDays)
+                        {
+                            string dayClass = GetDayClass(day);
+                            <div class="@dayClass" @onclick="() => OnDayClick(day)">
+                                <span class="date">@day.Day</span>
+                                @if (dayClass != "day other-month")
+                                {
+                                    var reservations = GetReservationsForDay(day);
+                                    @if (reservations.Any())
+                                    {
+                                        <div class="reservation-count">
+                                            @reservations.Count reservation@(reservations.Count != 1 ? "s" : "")
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reservations-list @(selectedDate.HasValue && selectedReservations.Any() ? "show" : "")">
+            <h3>Reservations for @(selectedDate?.ToShortDateString() ?? "No Date Selected")</h3>
+            <div class="reservations-grid">
+                @if (selectedDate.HasValue && selectedReservations.Any())
+                {
+                    @foreach (var reservation in selectedReservations)
+                    {
+                        <div class="reservation-card">
+                            <div class="reservation-header">
+                                <span class="reservation-id">@GetVehicleName(reservation.VehicleId)</span>
+                                <span class="reservation-status @reservation.Status.ToLower()">@reservation.Status</span>
+                            </div>
+                            <div class="reservation-details">
+                                <p>
+                                    <span><strong>Customer</strong> @GetUserFullName(reservation.UserId)</span>
+                                </p>
+                                <p>
+                                    <span><strong>Dates</strong> @FormatDate(reservation.StartDate) - @FormatDate(reservation.EndDate)</span>
+                                </p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Vehicle> vehicles = new();
+    private int selectedVehicleId = 0;
+    private List<DateTime> CalendarDays = new();
+    private DateTime currentMonth = DateTime.Today;
+    private DateTime? selectedDate;
+    private List<ReservationModel> selectedReservations = new();
+    private Dictionary<DateTime, List<ReservationModel>> reservationsByDate = new();
+    private bool showPastReservations = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehicles();
+        await LoadReservations();
+        GenerateCalendarDays();
+    }
+
+    private async Task LoadVehicles()
+    {
+        try
+        {
+            vehicles = await DbContext.Vehicles.OrderBy(v => v.name).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading vehicles: {ex.Message}");
+            vehicles = new List<Vehicle>();
+        }
+    }
+
+    private async Task LoadReservations()
+    {
+        try
+        {
+            var startDate = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var query = DbContext.Reservation
+                .Where(r => r.Status != "Cancelled") // Only exclude cancelled reservations
+                .Join(
+                    DbContext.Users,
+                    r => r.UserId,
+                    u => u.UserId,
+                    (r, u) => new
+                    {
+                        Reservation = r,
+                        UserName = $"{u.FirstName} {u.LastName}"
+                    }
+                );
+
+            if (selectedVehicleId != 0)
+            {
+                query = query.Where(r => r.Reservation.VehicleId == selectedVehicleId);
+            }
+
+            var reservations = await query
+                .Where(r => r.Reservation.StartDate <= endDate && r.Reservation.EndDate >= startDate)
+                .Select(r => new ReservationModel
+                {
+                    ReservationId = r.Reservation.ReservationId,
+                    VehicleId = r.Reservation.VehicleId,
+                    UserId = r.Reservation.UserId,
+                    StartDate = r.Reservation.StartDate,
+                    EndDate = r.Reservation.EndDate,
+                    Status = r.Reservation.Status,
+                    PickUpOrDropOff = r.Reservation.PickUpOrDropOff
+                })
+                .ToListAsync();
+
+            reservationsByDate.Clear();
+            foreach (var reservation in reservations)
+            {
+                for (var date = reservation.StartDate.Date; date <= reservation.EndDate.Date; date = date.AddDays(1))
+                {
+                    if (!reservationsByDate.ContainsKey(date))
+                    {
+                        reservationsByDate[date] = new List<ReservationModel>();
+                    }
+                    reservationsByDate[date].Add(reservation);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reservations: {ex.Message}");
+            reservationsByDate.Clear();
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnVehicleSelectionChanged(ChangeEventArgs e)
+    {
+        try
+        {
+            if (int.TryParse(e.Value?.ToString(), out int vehicleId))
+            {
+                selectedVehicleId = vehicleId;
+                selectedDate = null;
+                selectedReservations.Clear();
+                await LoadReservations();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error changing vehicle selection: {ex.Message}");
+        }
+    }
+
+    private void GenerateCalendarDays()
+    {
+        CalendarDays = new List<DateTime>();
+        var firstDayOfMonth = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+        // Add days from previous month
+        var firstDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+        var currentDate = firstDayOfMonth.AddDays(-firstDayOfWeek);
+
+        // Generate 42 days (6 weeks)
+        for (int i = 0; i < 42; i++)
+        {
+            CalendarDays.Add(currentDate);
+            currentDate = currentDate.AddDays(1);
+        }
+    }
+
+    private string GetDayClass(DateTime day)
+    {
+        var classes = new List<string> { "day" };
+
+        if (day.Month != currentMonth.Month)
+        {
+            classes.Add("other-month");
+        }
+        else if (!showPastReservations && day.Date < DateTime.Today)
+        {
+            classes.Add("past");
+        }
+        else if (selectedDate.HasValue && day.Date == selectedDate.Value.Date)
+        {
+            classes.Add("selected");
+        }
+        
+        if (reservationsByDate.ContainsKey(day.Date))
+        {
+            var dayReservations = reservationsByDate[day.Date];
+            if (dayReservations.Any())
+            {
+                var status = dayReservations.First().Status;
+                classes.Add(status.ToLower());
+            }
+            else
+            {
+                classes.Add("available");
+            }
+        }
+        else
+        {
+            classes.Add("available");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private List<ReservationModel> GetReservationsForDay(DateTime day)
+    {
+        return reservationsByDate.ContainsKey(day.Date) 
+            ? reservationsByDate[day.Date] 
+            : new List<ReservationModel>();
+    }
+
+    private async Task OnDayClick(DateTime day)
+    {
+        if (day.Month == currentMonth.Month && (showPastReservations || day.Date >= DateTime.Today))
+        {
+            selectedDate = day.Date;
+            selectedReservations = GetReservationsForDay(day);
+            StateHasChanged();
+        }
+    }
+
+    private void ShowPreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        GenerateCalendarDays();
+    }
+
+    private void ShowNextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        GenerateCalendarDays();
+    }
+
+    private string CurrentMonthYear => currentMonth.ToString("MMMM yyyy");
+
+    private string GetVehicleName(int vehicleId)
+    {
+        return vehicles.FirstOrDefault(v => v.id == vehicleId)?.name ?? "Unknown Vehicle";
+    }
+
+    private string GetUserFullName(int userId)
+    {
+        var user = DbContext.Users.FirstOrDefault(u => u.UserId == userId);
+        return user != null ? $"{user.FirstName} {user.LastName}" : "Unknown User";
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        return date.ToString("MMM. dd. yyyy");
+    }
+}
+
+<style>
+    .controls-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: #2196F3;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+
+    .toggle-label {
+        font-size: 14px;
+        color: #666;
+    }
+</style>

@@ -1,0 +1,177 @@
+{
+  "Files": [
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/obj/Debug/net8.0/scopedcss/projectbundle/elisha-gps-reservation-system.bundle.scp.css",
+      "PackagePath": "staticwebassets/elisha-gps-reservation-system.bundle.scp.css"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/Honda CBR.png",
+      "PackagePath": "staticwebassets/Images/Honda CBR.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/MG5.png",
+      "PackagePath": "staticwebassets/Images/MG5.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/almera.png",
+      "PackagePath": "staticwebassets/Images/almera.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/cfmoto.png",
+      "PackagePath": "staticwebassets/Images/cfmoto.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/click.png",
+      "PackagePath": "staticwebassets/Images/click.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/click150i.png",
+      "PackagePath": "staticwebassets/Images/click150i.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/click_blue.png",
+      "PackagePath": "staticwebassets/Images/click_blue.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/clod.png",
+      "PackagePath": "staticwebassets/Images/clod.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/cover.jpg",
+      "PackagePath": "staticwebassets/Images/cover.jpg"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/denied.png",
+      "PackagePath": "staticwebassets/Images/denied.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/dominar.png",
+      "PackagePath": "staticwebassets/Images/dominar.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/headerpic.jpg",
+      "PackagePath": "staticwebassets/Images/headerpic.jpg"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/hero-bg.jpg",
+      "PackagePath": "staticwebassets/Images/hero-bg.jpg"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/logo.png",
+      "PackagePath": "staticwebassets/Images/logo.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/mt09.png",
+      "PackagePath": "staticwebassets/Images/mt09.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/nmax.png",
+      "PackagePath": "staticwebassets/Images/nmax.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/pcx.png",
+      "PackagePath": "staticwebassets/Images/pcx.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/pcx160black.png",
+      "PackagePath": "staticwebassets/Images/pcx160black.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/reserved.png",
+      "PackagePath": "staticwebassets/Images/reserved.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/Images/sparkle.png",
+      "PackagePath": "staticwebassets/Images/sparkle.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/css/styles.css",
+      "PackagePath": "staticwebassets/css/styles.css"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/font/PlusJakartaSans-VariableFont_wght.ttf",
+      "PackagePath": "staticwebassets/font/PlusJakartaSans-VariableFont_wght.ttf"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/font/interVariable.ttf",
+      "PackagePath": "staticwebassets/font/interVariable.ttf"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/js/geolocation.js",
+      "PackagePath": "staticwebassets/js/geolocation.js"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/js/incidentLog.js",
+      "PackagePath": "staticwebassets/js/incidentLog.js"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/js/leafletMap.js",
+      "PackagePath": "staticwebassets/js/leafletMap.js"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads/14/83f1e5ac-8402-47e0-90fd-40d3402f487f_id2.jpg",
+      "PackagePath": "staticwebassets/uploads/14/83f1e5ac-8402-47e0-90fd-40d3402f487f_id2.jpg"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads/14/98e3872c-2519-418d-95c4-04a2f9b56cc6_clod.png",
+      "PackagePath": "staticwebassets/uploads/14/98e3872c-2519-418d-95c4-04a2f9b56cc6_clod.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads/14/ba7c7f91-4da3-4e22-83c3-a12b2b56fa19_id.png",
+      "PackagePath": "staticwebassets/uploads/14/ba7c7f91-4da3-4e22-83c3-a12b2b56fa19_id.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads/14/c8ffeefc-9ef4-48c1-8038-0469a78c944a_clod.png",
+      "PackagePath": "staticwebassets/uploads/14/c8ffeefc-9ef4-48c1-8038-0469a78c944a_clod.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads_rental_car/33/after/4bobtinz.hf1.png",
+      "PackagePath": "staticwebassets/uploads_rental_car/33/after/4bobtinz.hf1.png"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads_rental_car/33/after/nu4cipbt.nbx.jpg",
+      "PackagePath": "staticwebassets/uploads_rental_car/33/after/nu4cipbt.nbx.jpg"
+    },
+    {
+      "Id": "/home/peanut/Downloads/ELISHATESTING/tailwindtestelisha/elisha-gps-reservation-system/wwwroot/uploads_rental_car/36/after/2uqfgqaq.wuc.png",
+      "PackagePath": "staticwebassets/uploads_rental_car/36/after/2uqfgqaq.wuc.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.elisha-gps-reservation-system.props",
+      "PackagePath": "build\\elisha-gps-reservation-system.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.elisha-gps-reservation-system.props",
+      "PackagePath": "buildMultiTargeting\\elisha-gps-reservation-system.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.elisha-gps-reservation-system.props",
+      "PackagePath": "buildTransitive\\elisha-gps-reservation-system.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.elisha-gps-reservation-system.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

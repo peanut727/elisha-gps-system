@@ -1,0 +1,464 @@
+﻿@page "/ManageVehicles"
+@inject ApplicationDbContext DbContext
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.EntityFrameworkCore
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+        <!-- Header -->
+        <div class="relative mb-6 sm:mb-8">
+            <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">Manage Vehicles</h3>
+            <div class="absolute -bottom-2 left-0 w-16 h-1 bg-[#e39a3c] rounded-full"></div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="flex flex-row justify-start items-center p-1 bg-gray-100 rounded-xl mb-6 sm:mb-8 w-fit">
+            <button type="button" 
+                    class="px-4 sm:px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base
+                           @(isAddMode ? "bg-[#e39a3c] text-white shadow-lg" : "text-gray-600 hover:bg-[#e39a3c]/10")"
+                    @onclick="() => ToggleMode(true)">
+                Add Vehicle
+            </button>
+            <button type="button"
+                    class="px-4 sm:px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ml-1
+                           @(!isAddMode ? "bg-[#e39a3c] text-white shadow-lg" : "text-gray-600 hover:bg-[#e39a3c]/10")"
+                    @onclick="() => ToggleMode(false)">
+                Edit Vehicle
+            </button>
+        </div>
+
+        @if (isAddMode)
+        {
+            <div class="bg-gray-50 rounded-xl p-4 sm:p-8">
+                <h4 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">Add a New Vehicle</h4>
+                
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="bg-red-50 text-red-600 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 text-sm sm:text-base">@errorMessage</div>
+                }
+                
+                <EditForm Model="newVehicle" OnValidSubmit="AddVehicle" class="space-y-4 sm:space-y-6">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <!-- Vehicle Name -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="name" class="block text-sm font-medium text-gray-700">Vehicle Name</label>
+                            <InputText id="name" @bind-Value="newVehicle.name" 
+                                     class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- Vehicle Type -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="type" class="block text-sm font-medium text-gray-700">Vehicle Type</label>
+                            <InputSelect id="type" @bind-Value="newVehicle.type"
+                                       class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base">
+                                <option value="">Select Type</option>
+                                <option value="Sedan">Sedan</option>
+                                <option value="Van">Van</option>
+                                <option value="Pickup">Pickup</option>
+                                <option value="Scooter">Scooter</option>
+                                <option value="Big Bike">Big Bike</option>
+                            </InputSelect>
+                        </div>
+
+                        <!-- Transmission -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="transmission" class="block text-sm font-medium text-gray-700">Transmission</label>
+                            <InputSelect id="transmission" @bind-Value="newVehicle.transmission"
+                                       class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base">
+                                <option value="">Select Transmission</option>
+                                <option value="Auto">Auto</option>
+                                <option value="Manual">Manual</option>
+                            </InputSelect>
+                        </div>
+
+                        <!-- Mileage -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="mileage" class="block text-sm font-medium text-gray-700">Mileage (KM)</label>
+                            <InputNumber id="mileage" @bind-Value="newVehicle.mileage"
+                                       class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- Price Per Day -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="price_per_day" class="block text-sm font-medium text-gray-700">Price Per Day</label>
+                            <InputNumber id="price_per_day" @bind-Value="newVehicle.price_per_day"
+                                       class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- Capacity -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity</label>
+                            <InputText id="capacity" @bind-Value="newVehicle.capacity"
+                                     class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- GPS ID -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="gpsID" class="block text-sm font-medium text-gray-700">GPS ID</label>
+                            <InputText id="gpsID" @bind-Value="newVehicle.gpsID"
+                                     class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="space-y-1 sm:space-y-2">
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                            <InputSelect id="status" @bind-Value="newVehicle.status"
+                                       class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base">
+                                <option value="">Select Status</option>
+                                <option value="Available">Available</option>
+                                <option value="Reserved">Reserved</option>
+                                <option value="Pending">Pending</option>
+                            </InputSelect>
+                        </div>
+
+                        <!-- Image Source URL -->
+                        <div class="space-y-1 sm:space-y-2 md:col-span-2">
+                            <label for="imgsrc" class="block text-sm font-medium text-gray-700">Image Source URL</label>
+                            <InputText id="imgsrc" @bind-Value="newVehicle.imgsrc"
+                                     class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base"/>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="space-y-1 sm:space-y-2 md:col-span-3">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <InputTextArea id="description" @bind-Value="newVehicle.description"
+                                         class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] transition-colors text-sm sm:text-base h-24 sm:h-32"/>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-6 sm:mt-8">
+                        <button type="submit" 
+                                class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-[#e39a3c] text-white font-semibold rounded-xl
+                                       hover:bg-[#e39a3c]/90 focus:ring-4 focus:ring-[#e39a3c]/50 transition-colors text-sm sm:text-base">
+                            Add Vehicle
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        }
+        else
+        {
+            <div class="bg-gray-50 rounded-xl p-4 sm:p-8">
+                <h4 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">Edit Vehicles</h4>
+                @if (vehicles != null && vehicles.Any())
+                {
+                    <div class="space-y-4 sm:space-y-6">
+                        @foreach (var vehicle in vehicles)
+                        {
+                            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">@vehicle.name</h3>
+                                        <div class="flex items-center gap-2 mt-2 sm:mt-4">
+                                            <span class="px-3 py-1 rounded-full text-sm font-medium
+                                                       @(vehicle.status switch {
+                                                           "Available" => "bg-green-100 text-green-800",
+                                                           "Reserved" => "bg-blue-100 text-blue-800",
+                                                           "Pending" => "bg-yellow-100 text-yellow-800",
+                                                           "Maintenance" => "bg-red-100 text-red-800",
+                                                           _ => "bg-gray-100 text-gray-800"
+                                                       })">
+                                                @vehicle.status
+                                            </span>
+                                            <span class="text-sm text-gray-500">|</span>
+                                            <span class="text-sm text-gray-500">Type: @vehicle.type</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                                        <select value="@vehicle.status" 
+                                                @onchange="@(e => UpdateVehicleStatus(vehicle.id, e.Value.ToString()))"
+                                                class="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 
+                                                       focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] 
+                                                       transition-colors text-sm sm:text-base">
+                                            <option value="Available">Available</option>
+                                            <option value="Reserved">Reserved</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                        </select>
+                                        <button @onclick="() => InitiateDelete(vehicle)"
+                                                class="px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 
+                                                       transition-colors duration-300 text-sm sm:text-base font-medium flex items-center gap-2">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span class="hidden sm:inline">Remove</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-car text-2xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-medium text-gray-900 mb-2">No Vehicles Available</h3>
+                        <p class="text-gray-500">There are currently no vehicles in the system.</p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Success Modal -->
+@if (showAddSuccessModal)
+{
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                <p class="text-gray-600 mb-6">Vehicle has been successfully added.</p>
+                <button @onclick="CloseAddSuccessModal"
+                        class="px-6 sm:px-8 py-2.5 sm:py-3 bg-[#e39a3c] text-white font-semibold rounded-lg
+                               hover:bg-[#e39a3c]/90 transition-colors duration-300 text-sm sm:text-base">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Remove Success Modal -->
+@if (showRemoveSuccessModal)
+{
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                <p class="text-gray-600 mb-6">Vehicle has been successfully removed.</p>
+                <button @onclick="CloseRemoveSuccessModal"
+                        class="px-6 sm:px-8 py-2.5 sm:py-3 bg-[#e39a3c] text-white font-semibold rounded-lg
+                               hover:bg-[#e39a3c]/90 transition-colors duration-300 text-sm sm:text-base">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit Success Modal -->
+@if (showEditSuccessModal)
+{
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                <p class="text-gray-600 mb-6">Vehicle status has been successfully updated.</p>
+                <button @onclick="CloseEditSuccessModal"
+                        class="px-6 sm:px-8 py-2.5 sm:py-3 bg-[#e39a3c] text-white font-semibold rounded-lg
+                               hover:bg-[#e39a3c]/90 transition-colors duration-300 text-sm sm:text-base">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmModal)
+{
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+            <div class="text-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Confirm Deletion</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to remove this vehicle? This action cannot be undone.</p>
+                @if (vehicleToDelete != null)
+                {
+                    <div class="vehicle-details">
+                        <strong>Vehicle Name:</strong> @vehicleToDelete.name
+                        <br>
+                        <strong>Status:</strong> <span class="vehicle-status @vehicleToDelete.status.ToLower()">@vehicleToDelete.status</span>
+                    </div>
+                }
+                <div class="flex justify-center space-x-4">
+                    <button type="button" class="px-6 sm:px-8 py-2.5 sm:py-3 bg-gray-200 text-gray-600 font-semibold rounded-lg
+                                           hover:bg-gray-300 transition-colors duration-300 text-sm sm:text-base"
+                            @onclick="CloseDeleteConfirmModal">
+                        Cancel
+                    </button>
+                    <button type="button" class="px-6 sm:px-8 py-2.5 sm:py-3 bg-red-500 text-white font-semibold rounded-lg
+                                           hover:bg-red-600 transition-colors duration-300 text-sm sm:text-base"
+                            @onclick="ConfirmDelete">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAddMode = true;
+    private List<Vehicle> vehicles;
+    private string errorMessage = "";
+    private bool showAddSuccessModal = false;
+    private bool showRemoveSuccessModal = false;
+    private bool showEditSuccessModal = false;
+    private bool showDeleteConfirmModal = false;
+    private Vehicle newVehicle = new Vehicle
+    {
+        status = "Available",
+        name = "",
+        type = "",
+        transmission = "",
+        mileage = 0,
+        price_per_day = 0,
+        capacity = "",
+        description = "",
+        imgsrc = "",
+        gpsID = ""
+    };
+    private Vehicle vehicleToDelete = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehicles();
+    }
+
+    private void ToggleMode(bool addMode)
+    {
+        isAddMode = addMode;
+        errorMessage = "";
+        if (addMode)
+        {
+            newVehicle = new Vehicle
+            {
+                status = "Available",
+                name = "",
+                type = "",
+                transmission = "",
+                mileage = 0,
+                price_per_day = 0,
+                capacity = "",
+                description = "",
+                imgsrc = "",
+                gpsID = ""
+            };
+        }
+    }
+
+    private async Task LoadVehicles()
+    {
+        vehicles = await DbContext.Vehicles.ToListAsync();
+    }
+
+    private async Task AddVehicle()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newVehicle.name) ||
+                string.IsNullOrWhiteSpace(newVehicle.type) ||
+                string.IsNullOrWhiteSpace(newVehicle.transmission) ||
+                newVehicle.mileage == null ||
+                string.IsNullOrWhiteSpace(newVehicle.capacity) ||
+                string.IsNullOrWhiteSpace(newVehicle.description) ||
+                string.IsNullOrWhiteSpace(newVehicle.imgsrc) ||
+                string.IsNullOrWhiteSpace(newVehicle.gpsID) ||
+                string.IsNullOrWhiteSpace(newVehicle.status))
+            {
+                errorMessage = "Please fill in all required fields.";
+                return;
+            }
+
+            DbContext.Vehicles.Add(newVehicle);
+            await DbContext.SaveChangesAsync();
+            await LoadVehicles();
+
+            // Reset form
+            newVehicle = new Vehicle
+            {
+                status = "Available",
+                name = "",
+                type = "",
+                transmission = "",
+                mileage = 0,
+                price_per_day = 0,
+                capacity = "",
+                description = "",
+                imgsrc = "",
+                gpsID = ""
+            };
+            errorMessage = "";
+            showAddSuccessModal = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while adding the vehicle.";
+        }
+    }
+
+    private async Task RemoveCar(int id)
+    {
+        var vehicle = await DbContext.Vehicles.FindAsync(id);
+        if (vehicle != null)
+        {
+            DbContext.Vehicles.Remove(vehicle);
+            await DbContext.SaveChangesAsync();
+            await LoadVehicles();
+            showRemoveSuccessModal = true;
+        }
+    }
+
+    private async Task UpdateVehicleStatus(int id, string newStatus)
+    {
+        var vehicle = await DbContext.Vehicles.FindAsync(id);
+        if (vehicle != null)
+        {
+            vehicle.status = newStatus;
+            await DbContext.SaveChangesAsync();
+            showEditSuccessModal = true;
+            await LoadVehicles();
+        }
+    }
+
+    private void CloseAddSuccessModal()
+    {
+        showAddSuccessModal = false;
+    }
+
+    private void CloseRemoveSuccessModal()
+    {
+        showRemoveSuccessModal = false;
+    }
+
+    private void CloseEditSuccessModal()
+    {
+        showEditSuccessModal = false;
+    }
+
+    private void InitiateDelete(Vehicle vehicle)
+    {
+        vehicleToDelete = vehicle;
+        showDeleteConfirmModal = true;
+    }
+
+    private void CloseDeleteConfirmModal()
+    {
+        showDeleteConfirmModal = false;
+        vehicleToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (vehicleToDelete != null)
+        {
+            await RemoveCar(vehicleToDelete.id);
+            CloseDeleteConfirmModal();
+        }
+    }
+}

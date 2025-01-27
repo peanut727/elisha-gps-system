@@ -1,0 +1,465 @@
+@font-face {
+    font-family: "Inter";
+    src: url("font/interVariable.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.content-wrapper {
+    display: flex;
+    max-width: 1200px;
+    width: 100%;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.image-container {
+    display: none;
+    position: relative;
+    flex: 1;
+}
+
+@media (min-width: 1024px) {
+    .image-container {
+        display: block;
+    }
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: white;
+    text-align: center;
+}
+
+.overlay h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.overlay p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.form-container {
+    flex: 1;
+    max-width: 480px;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.signup-box {
+    width: 100%;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-header h2 {
+    font-size: 2rem;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.form-header p {
+    color: #6b7280;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.input-group i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 1.25rem;
+}
+
+.input-group .input-field[type="password"],
+.input-group .input-field[type="text"] {
+    padding-right: 3rem;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin: -0.5rem 0 1.25rem 2.75rem;
+    padding: 0;
+}
+
+.form-check-input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid #9ca3af;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
+}
+
+.form-check-input:checked {
+    background-color: #f4b554;
+    border-color: #f4b554;
+}
+
+.form-check-input:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 0.75rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.form-check-input:hover {
+    border-color: #f4b554;
+}
+
+.form-check-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-check-label:hover {
+    color: #4b5563;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.password-toggle:hover {
+    color: #4b5563;
+}
+
+.btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn i {
+    font-size: 1.25rem;
+}
+
+.btn-primary {
+    background-color: #f4b554;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #e39a3c;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    margin-top: 1rem;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    margin: 1rem 0;
+    color: #6b7280;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.or-divider span {
+    padding: 0 1rem;
+}
+
+.tos {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-align: center;
+}
+
+.tos a {
+    color: #f4b554;
+    text-decoration: none;
+}
+
+.tos a:hover {
+    text-decoration: underline;
+}
+
+.footer {
+    font-family: "Inter", sans-serif;
+    background-color: #f7f7f7;
+    color: #f7f7f7;
+    padding: 60px 20px;
+    border-top: 1px solid #a5a5a5;
+    justify-content: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+    gap: 40px; /* Adding space between columns */
+}
+
+.footer-info-column {
+    max-width: 300px;
+}
+
+.footer-info-column h4 {
+    color: #f4b554;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.footer-info-column p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.footer-brand {
+    max-width: 300px;
+}
+
+.footer-logo {
+    width: 200px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.footer-links {
+    display: flex;
+    gap: 40px;
+}
+
+.link-column h4 {
+    margin-bottom: 15px;
+    color: #f4b554;
+    font-size: 18px;
+}
+
+.link-column a {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.link-column a:hover {
+    color: #f4b554;
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    text-align: center;
+    border-top: 1px solid #a5a5a5;
+    padding-top: 20px;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.footer-terms {
+    margin-top: 10px;
+}
+
+.footer-terms a {
+    margin: 0 10px;
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-terms a:hover {
+    color: #f4b554;
+    text-decoration: underline;
+}
+
+.input-field {
+    transition: border-color 0.3s ease;
+}
+
+.input-field.valid {
+    border-color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.input-field.invalid {
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+::deep .validation-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: -0.5rem;
+    margin-bottom: 0.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .footer-logo {
+        width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-content {
+        padding: 20px;
+    }
+
+    .footer-logo {
+        width: 120px;
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1023px) {
+    .content-wrapper {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+    
+    .form-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .content-wrapper {
+        min-height: auto;
+    }
+    
+    .form-container {
+        padding: 1.5rem;
+    }
+}
+
+::deep .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: #f9fafb;
+}
+
+::deep .input-field:focus {
+    outline: none;
+    border-color: #f4b554;
+    box-shadow: 0 0 0 3px rgba(244, 181, 84, 0.2);
+    background-color: white;
+}

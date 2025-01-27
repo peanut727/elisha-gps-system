@@ -1,0 +1,63 @@
+/* Custom enhancements on top of Bootstrap */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(244, 181, 84, 0.2) !important;
+}
+
+.contact-info-icon {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #F4B554, #f8a532);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+}
+
+.form-control {
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #f8a532;
+    box-shadow: 0 0 0 0.25rem rgba(244, 181, 84, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #F4B554, #f8a532) !important;
+    border: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(244, 181, 84, 0.3);
+}
+
+.alert {
+    transition: opacity 0.3s;
+}
+
+.alert-success {
+    animation: slideIn 0.3s ease-out;
+    background-color: rgba(244, 181, 84, 0.1);
+    border-color: #f8a532;
+    color: #f8a532;
+}
+
+.alert-success i {
+    color: #f8a532;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

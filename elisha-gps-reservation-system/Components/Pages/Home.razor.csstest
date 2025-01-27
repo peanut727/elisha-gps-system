@@ -1,0 +1,451 @@
+@font-face {
+    font-family: "Inter";
+    src: url("font/interVariable.ttf") format("truetype");
+}
+@font-face {
+    font-family: "Jakarta";
+    src: url('font/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+    font-display: swap;
+}
+
+.container-all {
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+.hero-section {
+    padding: 40px 0;
+    margin-bottom: 40px;
+}
+
+.rental-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 20px 0;
+    margin: 0 auto;
+    width: 100%;
+    font-family: Inter, serif;
+}
+
+.rental-card {
+    display: flex;
+    flex: 1;
+    min-height: 320px;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #F4B554, #f8a532);
+    border-radius: 20px;
+    padding: 35px;
+    width: calc(50% - 15px);
+    box-shadow: 0 10px 25px rgba(244, 181, 84, 0.2);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.rental-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(244, 181, 84, 0.3);
+}
+
+.rental-text-content {
+    z-index: 1;
+    max-width: 60%;
+}
+
+.highlight-badge {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.rental-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rental-card p {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.explore-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #fff;
+    color: #F4B554;
+    padding: 12px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.explore-btn:hover {
+    background-color: #333;
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.explore-btn i {
+    transition: transform 0.3s ease;
+}
+
+.explore-btn:hover i {
+    transform: translateX(5px);
+}
+
+.rental-image {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 45%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+
+.rental-image img {
+    max-width: 100%;
+    max-height: 90%;
+    object-fit: contain;
+    transform: scale(1.1);
+    transition: transform 0.5s ease;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+}
+
+.rental-card:hover .rental-image img {
+    transform: scale(1.15) translateX(-10px);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    background: linear-gradient(to right, rgba(244, 181, 84, 0.9), rgba(244, 181, 84, 0));
+    z-index: 1;
+}
+
+.section-header {
+    text-align: center;
+    margin: 60px 0 40px;
+    position: relative;
+}
+
+.popular-item {
+    display: inline-block;
+    color: #52647d;
+    font-size: 1.5rem;
+    font-weight: 700;
+    position: relative;
+    margin: 0;
+    padding-bottom: 15px;
+}
+
+.popular-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, #F4B554, #f8a532);
+    border-radius: 2px;
+}
+
+.popular-item::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(244, 181, 84, 0.3);
+    border-radius: 2px;
+}
+
+.popular-item p {
+    margin-bottom: -3px;
+    font-size: 0.9rem;
+    font-weight: bolder;
+}
+
+.vehicle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 30px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+@media (min-width: 1400px) {
+    .vehicle {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1399px) and (min-width: 1024px) {
+    .vehicle {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+    .vehicle {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .vehicle {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+}
+
+.vehicle-item {
+    background-color: #ffffff;
+    width: 340px;
+    min-height: 536px;
+    border: 1px solid #dbdbdb;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    font-family: "Jakarta", serif;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-img {
+    position: relative;
+    margin: -15px -20px 25px;
+    padding: 10px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vehicle-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s ease;
+}
+
+.vehicle-item:hover img {
+    transform: scale(1.05);
+    filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.15));
+}
+
+.vehicle-name-type {
+    text-align: left;
+    padding: 0 5px;
+    margin-bottom: 25px;
+}
+
+.vehicle-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #242e42;
+    margin-bottom: 8px;
+}
+
+.vehicle-type {
+    font-size: 0.95rem;
+    color: #90A3BF;
+    font-weight: 500;
+}
+
+.vehicle-specs {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 15px 5px;
+    margin: 20px -5px;
+    border-top: 1px solid rgba(144, 163, 191, 0.2);
+    border-bottom: 1px solid rgba(144, 163, 191, 0.2);
+    background: linear-gradient(to right, rgba(244, 181, 84, 0.03), rgba(244, 181, 84, 0.08));
+}
+
+.spec-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.spec-item:hover {
+    transform: translateY(-2px);
+}
+
+.spec-item i {
+    font-size: 1rem;
+    color: #F4B554;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.spec-item:hover i {
+    transform: scale(1.1);
+}
+
+.spec-item p {
+    font-size: 0.85rem;
+    color: #52647d;
+    margin: 0;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.price-btn {
+    display:flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    margin: 0;
+
+}
+
+.price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 5px;
+}
+
+.price span {
+    font-size: 0.9rem;
+    color: #90A3BF;
+    font-weight: 500;
+}
+
+.price-amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #242e42;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.price-amount .currency {
+    color: #F4B554;
+    font-weight: 600;
+}
+
+.rent-btn {
+    background-color: #e39a3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    height: 44px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.rent-btn i {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.rent-btn:hover {
+    background-color: #d18a31;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(227, 154, 60, 0.2);
+}
+
+.rent-btn:hover i {
+    transform: translateX(4px);
+}
+
+.rent-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(227, 154, 60, 0.2);
+}
+
+@media (max-width: 1024px) {
+    .rental-container {
+        flex-direction: column;
+    }
+    
+    .rental-card {
+        width: 100%;
+    }
+    
+    .rental-text-content {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 768px) {
+    .rental-text-content {
+        max-width: 100%;
+    }
+    
+    .rental-image {
+        opacity: 0.2;
+    }
+    
+    .rental-card h2 {
+        font-size: 1.75rem;
+    }
+    
+    .popular-item {
+        font-size: 1.8rem;
+    }
+    
+    .popular-item::after {
+        width: 60px;
+    }
+    
+    .popular-item::before {
+        width: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-all {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}

@@ -1,0 +1,641 @@
+@page "/messages"
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject ApplicationDbContext Context
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+@using gps_tracking_system.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Net
+@using Microsoft.EntityFrameworkCore
+@using System.Collections.Generic
+@using elisha_gps_reservation_system.Components.Layout
+
+@implements IAsyncDisposable
+
+@* Add JavaScript functions *@
+<PageTitle>Chat</PageTitle>
+
+<script>
+    window.scrollToBottom = (element) => {
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    }
+</script>
+
+@if (!IsModalView)
+{
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div class="relative mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">Support Chat</h1>
+            <div class="absolute -bottom-2 left-0 w-20 h-1 bg-[#e39a3c] rounded-full"></div>
+        </div>
+    </div>
+}
+
+<div class="@(IsModalView ? "flex flex-col h-full" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8")">
+    <div class="@(IsModalView ? "flex-1 flex flex-col h-full" : "bg-white rounded-xl shadow-lg h-[calc(100vh-12rem)]")">
+        <div class="flex h-full">
+            @if (_isAdmin)
+            {
+                <!-- Users List -->
+                <div class="w-80 border-r border-gray-200 flex flex-col rounded-l-xl overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 bg-white">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-users text-[#e39a3c] mr-2"></i>
+                            Active Users
+                        </h3>
+                    </div>
+                    <div class="flex-1 overflow-y-auto bg-white">
+                        @if (!_allUsers.Any())
+                        {
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-user-slash text-3xl mb-2 text-primary-400"></i>
+                                <p>No users found</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var user in _allUsers.OrderByDescending(u => u.LastMessageTime ?? DateTime.MinValue)
+                                                         .ThenByDescending(u => u.IsOnline))
+                            {
+                                <div class="@(_currentChatUser == user.Username ? "bg-orange-50 border-orange" : "bg-white hover:bg-gray-50 border-gray-200") 
+                                         flex items-center space-x-3 p-3 rounded-xl border cursor-pointer transition-all duration-200"
+                                     @onclick="(() => SelectUser(user.Username))">
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-gray-900">@user.Username</p>
+                                        <div class="flex items-center space-x-2">
+                                            <p class="text-sm @(user.IsOnline ? "text-green-600" : "text-gray-500") flex items-center">
+                                                <span class="w-2 h-2 rounded-full @(user.IsOnline ? "bg-green-500" : "bg-gray-400") mr-1"></span>
+                                                @(user.IsOnline ? "Online" : "Offline")
+                                            </p>
+                                            @if (!string.IsNullOrEmpty(user.LastMessage))
+                                            {
+                                                <p class="text-sm text-gray-500 truncate">
+                                                    @(user.LastMessage.Length > 30 ? user.LastMessage.Substring(0, 27) + "..." : user.LastMessage)
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Chat Area -->
+            <div class="flex-1 flex flex-col bg-white rounded-r-xl overflow-hidden">
+                <!-- Chat Header -->
+                <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                        <span class="font-medium text-gray-700">Connected as <span class="font-semibold text-gray-700">@_username</span></span>
+                    </div>
+                    <button class="inline-flex items-center px-4 py-2 bg-[#e39a3c] text-white rounded-xl hover:bg-[#d68a2c] focus:outline-none focus:ring-2 focus:ring-[#e39a3c]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            @onclick="@DisconnectAsync">
+                        <i class="fas fa-sign-out-alt mr-2"></i> <span class="hidden sm:inline">Leave Chat</span>
+                    </button>
+                </div>
+
+                <!-- Messages Area -->
+                <div class="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4" id="messagesList" @ref="_messagesDiv">
+                    @if (!_messages.Any())
+                    {
+                        <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                            <i class="fas fa-comments text-4xl mb-2"></i>
+                            <p>No messages yet</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in _messages.OrderBy(m => m.Timestamp))
+                        {
+                            <div class="flex @(item.IsCurrentUser ? "justify-end" : "justify-start")">
+                                <div class="@(item.IsCurrentUser 
+                                    ? "bg-[#e39a3c] text-white rounded-t-2xl rounded-bl-2xl" 
+                                    : "bg-gray-100 text-gray-800 rounded-t-2xl rounded-br-2xl") 
+                                    p-4 max-w-[80%] break-words shadow-sm">
+                                    @if (!item.IsCurrentUser)
+                                    {
+                                        <div class="text-sm text-[#e39a3c] font-medium mb-1">@item.Username</div>
+                                    }
+                                    <p class="text-base leading-relaxed">@item.Body</p>
+                                    <div class="text-sm @(item.IsCurrentUser ? "text-white/90" : "text-gray-500") mt-1.5 text-right">
+                                        @item.Timestamp.Value.ToString("HH:mm")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <!-- Chat Input -->
+                <div class="border-t border-gray-200 p-4 bg-white">
+                    <div class="flex space-x-4">
+                        <div class="flex-1">
+                            <textarea 
+                                class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#e39a3c] resize-none"
+                                rows="1"
+                                placeholder="@(_isAdmin && string.IsNullOrEmpty(_currentChatUser) ? "Please select a user to start messaging" : "Type your message...")" 
+                                @bind="@_newMessage"
+                                @bind:event="oninput"
+                                @onkeydown="@HandleKeyPress"
+                                maxlength="@MaxMessageLength">
+                            </textarea>
+                        </div>
+                        <button class="inline-flex items-center px-4 py-2 bg-[#e39a3c] text-white rounded-xl hover:bg-[#d68a2c] focus:outline-none focus:ring-2 focus:ring-[#e39a3c]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                                @onclick="@SendMessage" 
+                                disabled="@(string.IsNullOrWhiteSpace(_newMessage) || (_isAdmin && string.IsNullOrEmpty(_currentChatUser)))">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsModalView { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsModalViewChanged { get; set; }
+
+    private async Task UpdateModalView(bool value)
+    {
+        IsModalView = value;
+        await IsModalViewChanged.InvokeAsync(value);
+    }
+
+    private class ChatMessage
+    {
+        public string Username { get; set; }
+        public string Body { get; set; }
+        public bool IsCurrentUser { get; set; }
+        public DateTime? Timestamp { get; set; }
+        public string CSS => IsCurrentUser ? "message-self" : "message-other";
+
+        public ChatMessage(string username, string body, bool isCurrentUser)
+        {
+            Username = username;
+            Body = body;
+            IsCurrentUser = isCurrentUser;
+            Timestamp = DateTime.Now;
+        }
+    }
+
+    private const int MaxMessageLength = 1000;
+    private const int MaxMessageHistory = 100;
+    private bool _isChatting = false;
+    private string _username;
+    private string _message;
+    private string _newMessage;
+    private Queue<ChatMessage> _messages = new(MaxMessageHistory);
+    private HubConnection _hubConnection;
+    private bool _isAdmin = false;
+    private List<string> _connectedUsers = new();
+    private List<UserInfo> _allUsers = new();
+    private string _currentChatUser;
+    private ElementReference _messagesDiv;
+
+    private class UserInfo
+    {
+        public string Username { get; set; }
+        public bool IsOnline { get; set; }
+        public DateTime? LastMessageTime { get; set; }
+        public string LastMessage { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _isAdmin = user.IsInRole("Admin");
+        _username = user.Identity?.Name;
+
+        if (_isAdmin)
+        {
+            // Load all users and their last messages for admin
+            var users = await Context.Users
+                .Where(u => u.Role != "Admin")
+                .Select(u => new UserInfo { 
+                    Username = u.Username, 
+                    IsOnline = false,
+                    LastMessageTime = null,
+                    LastMessage = null
+                })
+                .ToListAsync();
+
+            _allUsers = users;
+        }
+        else
+        {
+            // For regular users, we only need admin users in the list
+            var adminUsers = await Context.Users
+                .Where(u => u.Role == "Admin")
+                .Select(u => new UserInfo { 
+                    Username = u.Username, 
+                    IsOnline = false,
+                    LastMessageTime = null,
+                    LastMessage = null
+                })
+                .ToListAsync();
+
+            _allUsers = adminUsers;
+        }
+
+        // Load last messages for the user list
+        var lastMessages = await Context.Messages
+            .Where(m => (_isAdmin && (m.Sender.Role != "Admin" || m.Receiver.Role != "Admin")) ||
+                       (!_isAdmin && (m.Sender.Username == _username || m.Receiver.Username == _username)))
+            .OrderByDescending(m => m.Timestamp)
+            .Select(m => new { 
+                SenderUsername = m.Sender.Username,
+                ReceiverUsername = m.Receiver.Username,
+                Message = m.MessageText,
+                Timestamp = m.Timestamp
+            })
+            .ToListAsync();
+
+        // Update users with their last message info
+        foreach (var userr in _allUsers)
+        {
+            var lastMessage = lastMessages.FirstOrDefault(m => 
+                (m.SenderUsername == userr.Username && m.ReceiverUsername == _username) ||
+                (m.SenderUsername == _username && m.ReceiverUsername == userr.Username));
+
+            if (lastMessage != null)
+            {
+                userr.LastMessage = lastMessage.Message;
+                userr.LastMessageTime = lastMessage.Timestamp;
+            }
+        }
+
+        // Sort users by last message time
+        _allUsers = _allUsers.OrderByDescending(u => u.LastMessageTime ?? DateTime.MinValue)
+                           .ThenByDescending(u => u.IsOnline)
+                           .ToList();
+
+        var uri = new UriBuilder(Navigation.Uri);
+
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/chat"), options =>
+            {
+                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+                if (HttpContextAccessor.HttpContext != null)
+                {
+                    foreach (var c in HttpContextAccessor.HttpContext.Request.Cookies)
+                    {
+                        options.Cookies.Add(new Cookie(c.Key, c.Value)
+                        {
+                            Domain = uri.Host,
+                            Path = "/"
+                        });
+                    }
+                }
+            })
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<string, string, string>("ReceiveMessage", async (sender, receiver, message) =>
+        {
+            var timestamp = DateTime.UtcNow;
+            var newMsg = new ChatMessage(sender, message, sender.Equals(_username, StringComparison.OrdinalIgnoreCase))
+            {
+                Timestamp = timestamp
+            };
+
+            // Update the messages list if this is the current chat
+            if ((_isAdmin && (sender == _currentChatUser || receiver == _currentChatUser)) ||
+                (!_isAdmin && (sender == _username || receiver == _username)))
+            {
+                if (!_messages.Any(m => m.Username == sender && 
+                                   m.Body == message && 
+                                   m.Timestamp?.AddSeconds(-1) <= timestamp && 
+                                   m.Timestamp?.AddSeconds(1) >= timestamp))
+                {
+                    AddMessage(newMsg);
+                }
+            }
+
+            // Update the last message for the relevant user
+            var userToUpdate = _allUsers.FirstOrDefault(u => 
+                u.Username == (_username == sender ? receiver : sender));
+
+            if (userToUpdate != null)
+            {
+                userToUpdate.LastMessage = message;
+                userToUpdate.LastMessageTime = timestamp;
+                
+                // Re-sort the list
+                _allUsers = _allUsers.OrderByDescending(u => u.LastMessageTime ?? DateTime.MinValue)
+                                   .ThenByDescending(u => u.IsOnline)
+                                   .ToList();
+                
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+
+        _hubConnection.On<List<string>>("ConnectedUsers", async (users) =>
+        {
+            _connectedUsers = users.Where(u => u != _username).ToList();
+            await UpdateUserStatuses();
+            await InvokeAsync(StateHasChanged);
+        });
+
+        _hubConnection.On<string>("UserConnected", async (username) =>
+        {
+            if (!_connectedUsers.Contains(username))
+            {
+                _connectedUsers.Add(username);
+                await UpdateUserStatuses();
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+
+        _hubConnection.On<string>("UserDisconnected", async (username) =>
+        {
+            if (_connectedUsers.Contains(username))
+            {
+                _connectedUsers.Remove(username);
+                await UpdateUserStatuses();
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+
+        _hubConnection.On<string>("MessageError", async (error) =>
+        {
+            _message = error;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(3000);
+            _message = null;
+            await InvokeAsync(StateHasChanged);
+        });
+
+        _hubConnection.On<string>("MessageSent", (username) =>
+        {
+            // Optional: Add visual feedback that message was sent
+        });
+
+        _hubConnection.On("ForceDisconnect", async () =>
+        {
+            await DisconnectAsync();
+            _message = "You have been disconnected because you logged in from another location.";
+            await InvokeAsync(StateHasChanged);
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+            _isChatting = true;
+            await _hubConnection.SendAsync("RegisterUser", _username);
+
+            // Load initial messages for both admin and regular users
+            if (_isAdmin && _allUsers.Any())
+            {
+                await SelectUser(_allUsers.First().Username);
+            }
+            else
+            {
+                // Load message history for regular users
+                var messages = await Context.Messages
+                    .Where(m => (m.Sender.Username == _username || m.Receiver.Username == _username))
+                    .OrderBy(m => m.Timestamp)
+                    .Select(m => new { 
+                        Sender = m.Sender.Username,
+                        Message = m.MessageText,
+                        Timestamp = m.Timestamp
+                    })
+                    .ToListAsync();
+
+                foreach (var msg in messages)
+                {
+                    var chatMessage = new ChatMessage(msg.Sender, msg.Message, 
+                        msg.Sender.Equals(_username, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Timestamp = msg.Timestamp
+                    };
+                    AddMessage(chatMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"ERROR: Failed to start chat client: {ex.Message}";
+            _isChatting = false;
+        }
+    }
+
+    private async Task UpdateUserStatuses()
+    {
+        foreach (var user in _allUsers)
+        {
+            user.IsOnline = _connectedUsers.Contains(user.Username);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try 
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", _messagesDiv);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error scrolling to bottom: {ex.Message}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ScrollToBottom();
+        }
+    }
+
+    private async Task LoadPreviousMessages()
+    {
+        try
+        {
+            var currentUser = await Context.Users.FirstOrDefaultAsync(u => u.Username == _username);
+            if (currentUser == null) return;
+
+            IQueryable<Message> query;
+            if (_isAdmin && !string.IsNullOrEmpty(_currentChatUser))
+            {
+                var selectedUser = await Context.Users.FirstOrDefaultAsync(u => u.Username == _currentChatUser);
+                if (selectedUser == null) return;
+
+                // Get all messages between admin and selected user
+                query = Context.Messages
+                    .Where(m => 
+                        (m.SenderId == currentUser.UserId && m.ReceiverId == selectedUser.UserId) ||
+                        (m.SenderId == selectedUser.UserId && m.ReceiverId == currentUser.UserId))
+                    .Include(m => m.Sender)
+                    .Include(m => m.Receiver);
+            }
+            else if (!_isAdmin)
+            {
+                // Get all messages between user and any admin
+                var adminUserIds = await Context.Users
+                    .Where(u => u.Role == "Admin")
+                    .Select(u => u.UserId)
+                    .ToListAsync();
+
+                query = Context.Messages
+                    .Where(m =>
+                        (m.SenderId == currentUser.UserId && adminUserIds.Contains(m.ReceiverId)) ||
+                        (m.ReceiverId == currentUser.UserId && adminUserIds.Contains(m.SenderId)))
+                    .Include(m => m.Sender)
+                    .Include(m => m.Receiver);
+            }
+            else
+            {
+                return; // Admin without selected user
+            }
+
+            var messages = await query
+                .OrderByDescending(m => m.Timestamp)
+                .Take(100) // Load more messages for history
+                .ToListAsync();
+
+            _messages.Clear();
+            foreach (var msg in messages.OrderBy(m => m.Timestamp))
+            {
+                var isCurrentUser = msg.SenderId == currentUser.UserId;
+                _messages.Enqueue(new ChatMessage(
+                    msg.Sender.Username, 
+                    msg.MessageText, 
+                    isCurrentUser)
+                {
+                    Timestamp = msg.Timestamp
+                });
+            }
+
+            await InvokeAsync(StateHasChanged);
+            await ScrollToBottom();
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error loading messages: {ex.Message}";
+        }
+    }
+
+    private async Task SelectUser(string username)
+    {
+        _currentChatUser = username;
+        await LoadPreviousMessages();
+    }
+
+    private async Task Chat()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user == null || !user.Identity.IsAuthenticated)
+        {
+            _message = "You must be logged in to join the chat";
+            return;
+        }
+
+        try
+        {
+            _username = user.Identity.Name;
+            _isAdmin = user.IsInRole("Admin");
+            _isChatting = true;
+            _messages.Clear();
+            await _hubConnection.SendAsync("RegisterUser", _username);
+            await LoadPreviousMessages();
+        }
+        catch (Exception e)
+        {
+            _message = $"Error joining chat: {e.Message}";
+            _isChatting = false;
+        }
+    }
+
+    private async Task AddMessage(ChatMessage message)
+    {
+        if (_messages.Count >= MaxMessageHistory)
+        {
+            _messages.Dequeue();
+        }
+        _messages.Enqueue(message);
+        await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
+    }
+
+    private async Task SendMessage()
+    {
+        if (!_isChatting || string.IsNullOrWhiteSpace(_newMessage))
+        {
+            return;
+        }
+
+        try
+        {
+            if (_hubConnection is not null)
+            {
+                string receiver = _isAdmin ? _currentChatUser : 
+                    (await Context.Users.FirstOrDefaultAsync(u => u.Role == "Admin"))?.Username;
+                
+                if (receiver == null)
+                {
+                    Console.WriteLine("No receiver found for message");
+                    return;
+                }
+
+                await _hubConnection.SendAsync("SendMessage", _username, receiver, _newMessage);
+                _newMessage = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending message: {ex.Message}");
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey && !(_isAdmin && string.IsNullOrEmpty(_currentChatUser)))
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task DisconnectAsync()
+    {
+        if (_isChatting)
+        {
+            try
+            {
+                await _hubConnection.StopAsync();
+                await _hubConnection.DisposeAsync();
+                
+            }
+            catch (Exception) { }
+            finally
+            {
+                _hubConnection = null;
+                _isChatting = false;
+                _messages.Clear();
+                _connectedUsers.Clear();
+                _currentChatUser = null;
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisconnectAsync();
+    }
+}

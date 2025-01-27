@@ -1,0 +1,126 @@
+﻿@page "/about"
+@rendermode InteractiveServer
+
+<div class="min-h-screen bg-gray-50 font-jakarta">
+    <!-- Hero Section with Parallax Effect -->
+    <div class="relative h-[60vh] overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-br from-black/70 to-[#f3b755]/30"></div>
+            <img src="Images/headerpic.jpg" 
+                 class="w-full h-full object-cover scale-105 transform motion-safe:animate-[kenburns_20s_ease-in-out_infinite] filter blur-[2px] brightness-75" 
+                 alt="About us hero">
+        </div>
+        
+        <div class="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight motion-safe:animate-fade-in-down">
+                Your Journey <span class="text-[#f3b755]">Begins Here</span>
+            </h1>
+            <div class="flex flex-col items-center space-y-6 motion-safe:animate-fade-in-up">
+                <p class="text-xl md:text-2xl text-white/90 max-w-2xl leading-relaxed">
+                    Unleash your spirit, hit the road, and make memories with our unmatched motorcycle rentals.
+                </p>
+                <div class="flex items-center space-x-2 text-white/90">
+                    <span class="text-[#f3b755] text-4xl">•</span>
+                    <span class="text-xl">Your adventure starts now!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-8 shadow-lg transform hover:-translate-y-2 transition-all duration-300">
+                <div class="w-14 h-14 bg-[#f3b755]/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fas fa-motorcycle text-2xl text-[#f3b755]"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Premium Bikes</h3>
+                <p class="text-gray-600">Experience the thrill of riding with our carefully maintained fleet of motorcycles.</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-lg transform hover:-translate-y-2 transition-all duration-300">
+                <div class="w-14 h-14 bg-[#f3b755]/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fas fa-shield-alt text-2xl text-[#f3b755]"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Safety First</h3>
+                <p class="text-gray-600">Your safety is our priority. All bikes undergo regular maintenance checks.</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-lg transform hover:-translate-y-2 transition-all duration-300">
+                <div class="w-14 h-14 bg-[#f3b755]/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fas fa-clock text-2xl text-[#f3b755]"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Quick Support</h3>
+                <p class="text-gray-600">Dedicated customer service during business hours</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <!-- Contact Info -->
+                <div class="p-12 bg-[#f3b755]">
+                    <h2 class="text-3xl font-bold text-white mb-8">Don't be shy, say hi! 💌</h2>
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-map-marker-alt text-xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Location</h3>
+                                <p class="text-white/80">Bulacan, Philippines</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-phone text-xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Phone</h3>
+                                <p class="text-white/80">+63 123 456 7890</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-envelope text-xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Email</h3>
+                                <p class="text-white/80">contact@elisharental.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Links -->
+                    <div class="mt-12 flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-colors duration-300">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-colors duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-colors duration-300">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Map or Image -->
+                <div class="relative h-full min-h-[400px]">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241.10937876144407!2d120.95873831551727!3d14.815996721069844!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397adb1554fe683%3A0x298aa55ab0439c14!2sBCF%20Santa%20Maria!5e0!3m2!1sen!2sph!4v1703174622247!5m2!1sen!2sph"
+                        class="absolute inset-0 w-full h-full border-0"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

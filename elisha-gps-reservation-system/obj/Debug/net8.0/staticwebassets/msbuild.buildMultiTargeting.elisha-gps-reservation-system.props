@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/elisha-gps-reservation-system.props" />
+</Project>

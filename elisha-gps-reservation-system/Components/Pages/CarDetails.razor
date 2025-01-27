@@ -1,0 +1,560 @@
+﻿@page "/details/{vehicleId:int}"
+@rendermode InteractiveServer
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="car-details-container">
+    @if (car != null)
+    {
+        @if (isLoading)
+        {
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading vehicle details...</p>
+            </div>
+        }
+        else
+        {
+            <div class="hero-section">
+                <div class="vehicle-images">
+                    <img src="@car.imgsrc" alt="@car.name" class="main-image">
+                </div>
+                
+                <div class="vehicle-info-card">
+                    <div class="vehicle-header">
+                        <h1>@car.name</h1>
+                        <div class="price-tag">
+                            <span class="currency"><i class="fas fa-peso-sign"></i></span>
+                            <span class="amount">@car.price_per_day.ToString("N2")</span>
+                            <span class="per-day">per day</span>
+                        </div>
+                    </div>
+
+                    <p class="vehicle-description">@car.description</p>
+
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <i class="fas fa-car"></i>
+                            <span class="spec-label">Type</span>
+                            <span class="spec-value">@car.type</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-users"></i>
+                            <span class="spec-label">Capacity</span>
+                            <span class="spec-value">@car.capacity</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-gear"></i>
+                            <span class="spec-label">Transmission</span>
+                            <span class="spec-value">@car.transmission</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-gauge"></i>
+                            <span class="spec-label">Mileage</span>
+                            <span class="spec-value">@car.mileage</span>
+                        </div>
+                    </div>
+
+                    <div class="vehicle-actions">
+                        <button class="calendar-toggle" @onclick="ToggleCalendar">
+                            <i class="fas fa-calendar"></i>
+                            Check Availability
+                        </button>
+                        <button class="rent-button" @onclick="NavigateToReservation">
+                            <i class="fas fa-calendar-check"></i>
+                            Rent Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (showCalendar)
+            {
+                <div class="availability-section @(showCalendar ? "show" : "")">
+                    <div class="section-header">
+                        <h2>Availability Calendar</h2>
+                        <div class="legend">
+                            <span class="legend-item available">
+                                <i class="fas fa-square"></i> Available
+                            </span>
+                            <span class="legend-item pending">
+                                <i class="fas fa-square"></i> Pending
+                            </span>
+                            <span class="legend-item reserved">
+                                <i class="fas fa-square"></i> Reserved
+                            </span>
+                            <span class="legend-item past">
+                                <i class="fas fa-square"></i> Past
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="calendar-wrapper">
+                        <div class="calendar-nav">
+                            <button @onclick="ShowPreviousMonth" 
+                                    disabled="@IsPreviousButtonDisabled"
+                                    class="nav-button">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="current-month">@CurrentMonthYear</span>
+                            <button @onclick="ShowNextMonth"
+                                    class="nav-button">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="calendar">
+                            <div class="weekdays">
+                                @foreach (var day in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+                                {
+                                    <div class="weekday">@day</div>
+                                }
+                            </div>
+
+                            <div class="days">
+                                @for (var i = 0; i < LeadingBlankDays; i++)
+                                {
+                                    <div class="day empty"></div>
+                                }
+                                @foreach (var day in CalendarDays)
+                                {
+                                    <div class="day @GetDayClass(day)">
+                                        <span class="date">@day.Day</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="content-section">
+                <div class="reviews-section">
+                    <div class="section-header">
+                        <h2>Customer Reviews</h2>
+                        @if (_vehicleReviews != null && _vehicleReviews.Any())
+                        {
+                            <div class="reviews-summary">
+                                <div class="average-rating">
+                                    <span class="rating-number">@(_vehicleReviews.Average(r => r.Rating).ToString("0.0"))</span>
+                                    <div class="rating">
+                                        @{
+                                            var avgRating = _vehicleReviews.Average(r => r.Rating);
+                                            for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star @(i <= Math.Round(avgRating) ? "filled" : "")"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="total-reviews">(@_vehicleReviews.Count @(_vehicleReviews.Count == 1 ? "review" : "reviews"))</span>
+                                </div>
+                            </div>
+                        }
+                        @if (_isAuthenticated)
+                        {
+                            <button class="write-review-button" @onclick="() => _showReviewModal = true">
+                                <i class="fas fa-pen"></i> Write a Review
+                            </button>
+                        }
+                    </div>
+
+                    @if (_isAuthenticated && _showReviewModal)
+                    {
+                        <div class="modal-backdrop" @onclick="() => _showReviewModal = false">
+                            <div class="modal-content" @onclick:stopPropagation="true">
+                                <div class="modal-header">
+                                    <h3>Write a Review</h3>
+                                    <button class="close-button" @onclick="() => _showReviewModal = false">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="rating-input">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            var rating = i;
+                                            <span class="star @(rating <= _newReview.Rating ? "selected" : "")"
+                                                  @onclick="() => SetRating(rating)">
+                                                <i class="fas fa-star"></i>
+                                            </span>
+                                        }
+                                    </div>
+                                    <textarea 
+                                        @bind="_newReview.Comment" 
+                                        placeholder="Share your experience with this vehicle..."
+                                        rows="4">
+                                    </textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="cancel-button" @onclick="() => _showReviewModal = false">Cancel</button>
+                                    <button class="submit-review" @onclick="SubmitReview" disabled="@_isSubmitting">
+                                        @if (_isSubmitting)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <span>Submitting...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Submit Review</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="reviews-list">
+                        @if (_vehicleReviews == null)
+                        {
+                            <div class="loading-reviews">Loading reviews...</div>
+                        }
+                        else if (_vehicleReviews.Any())
+                        {
+                            var reviewsToShow = _showAllReviews ? _vehicleReviews : _vehicleReviews.Take(2);
+                            foreach (var review in reviewsToShow)
+                            {
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <span class="reviewer-name">@review.UserName</span>
+                                        <div class="rating">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star @(i <= review.Rating ? "filled" : "")"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                    <p class="review-text">@review.Comment</p>
+                                    <span class="review-date">@review.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            }
+                            
+                            @if (_vehicleReviews.Count > 2 && !_showAllReviews)
+                            {
+                                <div class="show-all-reviews">
+                                    <button class="show-all-button" @onclick="() => _showAllReviews = true">
+                                        Show All Reviews (@_vehicleReviews.Count)
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="no-reviews">No reviews yet. Be the first to review this vehicle!</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else if (hasError)
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Sorry, we couldn't find the vehicle you're looking for.</p>
+            <button class="back-button" @onclick="NavigateToVehicles">
+                Back to Vehicles
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="not-found">
+            <i class="fas fa-car-side"></i>
+            <h3>Vehicle Not Found</h3>
+            <p>The vehicle you're looking for doesn't exist or has been removed.</p>
+            <button class="back-btn" @onclick="NavigateToVehicles">
+                Back to Vehicles
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] 
+    public int vehicleId { get; set; }
+    private Vehicle? car;
+    private List<DateTime> CalendarDays = new();
+    private List<ReservationModel> ReservationsForVehicle = new();
+    private List<VehicleReviewDto>? _vehicleReviews = null;
+    private DateTime CurrentMonth { get; set; } = new(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private int LeadingBlankDays { get; set; } = 0;
+    private bool IsPreviousButtonDisabled => CurrentMonth <= new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private bool isLoading = true;
+    private bool hasError = false;
+    private string errorMessage = string.Empty;
+
+    private bool _isAuthenticated;
+    private bool _hasUserRented;
+    private bool _isSubmitting;
+    private string? _currentUserId;
+    private NewReviewModel _newReview = new();
+
+    private bool showCalendar = false;
+    private bool _showAllReviews = false;
+    private bool _showReviewModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            _vehicleReviews = null; // Ensure null state for loading indicator
+            
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+            
+            if (_isAuthenticated)
+            {
+                _currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (_currentUserId != null)
+                {
+                    _hasUserRented = await HasUserRentedVehicle(_currentUserId, vehicleId);
+                }
+            }
+
+            car = await DbContext.Vehicles.FindAsync(vehicleId);
+            
+            if (car != null)
+            {
+                await LoadCalendarForMonth(CurrentMonth);
+                await LoadVehicleReviews();
+                StateHasChanged(); // Force UI update after loading reviews
+            }
+        }
+        catch (Exception ex)
+        {
+            hasError = true;
+            errorMessage = "Unable to load vehicle details. Please try again later.";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadVehicleReviews()
+    {
+        _vehicleReviews = await GetVehicleReviews(vehicleId);
+    }
+
+    private void NavigateToReservation()
+    {
+        Navigation.NavigateTo($"/reservation/{vehicleId}", forceLoad: true);
+    }
+    
+    private void NavigateToVehicles()
+    {
+        Navigation.NavigateTo("/vehicles");
+    }
+    
+    private async Task RetryLoading()
+    {
+        hasError = false;
+        isLoading = true;
+        await OnInitializedAsync();
+    }
+    
+    private void ShowAllReviews()
+    {
+        // Implement review modal or navigation to full reviews page
+        Navigation.NavigateTo($"/vehicle/{vehicleId}/reviews");
+    }
+    
+    private bool IsToday(DateTime date)
+    {
+        return date.Date == DateTime.Today;
+    }
+    
+    private string GetDayAriaLabel(DateTime day)
+    {
+        var status = GetDayClass(day);
+        return $"{day.ToString("MMMM d, yyyy")} - {status}";
+    }
+
+    // Method to load the calendar for the given month
+    private async Task LoadCalendarForMonth(DateTime month)
+    {
+        // Generate the calendar for the current month
+        var startDate = new DateTime(month.Year, month.Month, 1);
+
+        LeadingBlankDays = (int)startDate.DayOfWeek;
+
+        var endDate = startDate.AddMonths(1);
+        CalendarDays = GenerateCalendarDays(startDate, endDate);
+
+        // Load reserved dates for the vehicle
+        ReservationsForVehicle = await GetReservationsForVehicle(vehicleId);
+    }
+
+    // Method to generate a list of days for the calendar
+    private List<DateTime> GenerateCalendarDays(DateTime startDate, DateTime endDate)
+    {
+        var days = new List<DateTime>();
+        for (var date = startDate; date < endDate; date = date.AddDays(1))
+        {
+            days.Add(date.Date); // Add only the date part (ignoring time)
+        }
+
+        return days;
+    }
+
+    // Get the reserved dates for the car
+    private async Task<List<ReservationModel>> GetReservationsForVehicle(int vehicleId)
+    {
+        var reservations = await DbContext.Reservation
+            .Where(r => r.VehicleId == vehicleId && r.Status != "Cancelled")
+            .ToListAsync();
+
+        Console.WriteLine($"Reservations for vehicle {vehicleId}: {reservations.Count}");
+        foreach (var reservation in reservations)
+        {
+            Console.WriteLine($"ReservationID: {reservation.ReservationId}, StartDate: {reservation.StartDate}, EndDate: {reservation.EndDate}, Status: {reservation.Status}");
+        }
+
+        return reservations;
+    }
+    
+    // Reviews
+    private async Task<List<VehicleReviewDto>> GetVehicleReviews(int vehicleId)
+    {
+        var reviews = await DbContext.VehicleReviews
+            .Where(r => r.VehicleId == vehicleId)
+            .Join(
+                DbContext.Users,
+                review => review.UserId,
+                user => user.UserId,
+                (review, user) => new { Review = review, User = user })
+            .Select(joined => new VehicleReviewDto
+            {
+                ReviewId = joined.Review.ReviewId,
+                VehicleId = joined.Review.VehicleId,
+                UserId = joined.Review.UserId,
+                UserName = $"{joined.User.FirstName} {joined.User.LastName}",
+                Rating = joined.Review.Rating,
+                Comment = joined.Review.Comment,
+                CreatedAt = joined.Review.ReviewDate
+            })
+            .ToListAsync();
+        return reviews;
+    }
+
+    private async Task<bool> HasUserRentedVehicle(string userId, int vehicleId)
+    {
+        return await DbContext.Reservation
+            .AnyAsync(r => r.UserId.ToString() == userId && 
+                          r.VehicleId == vehicleId && 
+                          r.Status == "Completed");
+    }
+
+    private void SetRating(int rating)
+    {
+        _newReview.Rating = rating;
+        StateHasChanged();
+    }
+
+    private async Task SubmitReview()
+    {
+        if (string.IsNullOrWhiteSpace(_currentUserId) || _newReview.Rating == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _isSubmitting = true;
+
+            var review = new VehicleReview
+            {
+                VehicleId = vehicleId,
+                UserId = int.Parse(_currentUserId),
+                Rating = _newReview.Rating,
+                Comment = _newReview.Comment,
+                ReviewDate = DateTime.UtcNow
+            };
+
+            DbContext.VehicleReviews.Add(review);
+            await DbContext.SaveChangesAsync();
+
+            // Reset form
+            _newReview = new NewReviewModel();
+            
+            // Reload reviews
+            await LoadVehicleReviews();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error submitting review: {ex.Message}");
+            // You might want to show an error message to the user here
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    // Helper method to get the CSS class for reserved days based on status
+    private string GetDayClass(DateTime day)
+    {
+        if (day.Date < DateTime.Today)
+        {
+            return "past";
+        }
+
+        // Check for any reservation that covers the current day, considering both start and end dates
+        var reservation = ReservationsForVehicle.FirstOrDefault(r =>
+            day.Date >= r.StartDate.Date && day.Date <= r.EndDate.Date);
+
+        if (reservation != null)
+        {
+            return reservation.Status.ToLower();
+        }
+
+        return "available";
+    }
+
+    // Show previous month
+    private async Task ShowPreviousMonth()
+    {
+        var startOfCurrentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        if (CurrentMonth > startOfCurrentMonth)
+        {
+            CurrentMonth = CurrentMonth.AddMonths(-1);
+            await LoadCalendarForMonth(CurrentMonth);
+        }
+    }
+
+    // Show next month
+    private async Task ShowNextMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(1);
+        await LoadCalendarForMonth(CurrentMonth);
+    }
+
+    // Get the current month and year as a string
+    private string CurrentMonthYear => $"{CurrentMonth:MMMM yyyy}";
+
+    private void ToggleCalendar()
+    {
+        showCalendar = !showCalendar;
+    }
+
+    public class VehicleReviewDto
+    {
+        public int ReviewId { get; set; }
+        public int VehicleId { get; set; }
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public int Rating { get; set; }
+        public string Comment { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class NewReviewModel
+    {
+        public int Rating { get; set; }
+        public string Comment { get; set; } = string.Empty;
+    }
+}

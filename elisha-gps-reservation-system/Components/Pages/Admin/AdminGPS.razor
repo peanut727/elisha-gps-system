@@ -1,0 +1,648 @@
+﻿@page "/admin_gps"
+@attribute [Authorize(Roles = "Admin")]
+@using elisha_gps_reservation_system.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text.Json
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+@inject IJSRuntime JSRuntime
+@inject ApplicationDbContext DbContext
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+
+
+<PageTitle>GPS Tracking</PageTitle>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<HeadContent>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+</HeadContent>
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="p-6 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-100">
+        <div class="flex flex-wrap gap-6 items-center justify-between">
+            <button class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg shadow-amber-500/20" 
+                    @onclick="ToggleVehiclesList">
+                <i class="fas fa-car"></i>
+                <span>@(showVehiclesList ? "Hide Vehicles" : "Show Vehicles")</span>
+            </button>
+
+            <div class="flex flex-wrap gap-8">
+                <!-- Speed Stats -->
+                <div class="flex gap-8">
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Current</span>
+                        <div class="font-bold">
+                            <span class="text-2xl bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">@(_lastGpsData?.Speed.ToString("F1") ?? "0.0")</span>
+                            <span class="text-sm text-gray-500 ml-1">KM/H</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Top</span>
+                        <div class="font-bold">
+                            <span class="text-2xl bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">@_topSpeed.ToString("F1")</span>
+                            <span class="text-sm text-gray-500 ml-1">KM/H</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Average</span>
+                        <div class="font-bold">
+                            <span class="text-2xl bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">@_averageSpeed.ToString("F1")</span>
+                            <span class="text-sm text-gray-500 ml-1">KM/H</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location Stats -->
+                <div class="flex gap-8">
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Latitude</span>
+                        <div class="font-bold">
+                            <span class="text-lg font-mono">@(_lastGpsData?.Latitude.ToString("F6") ?? "0.000000")</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Longitude</span>
+                        <div class="font-bold">
+                            <span class="text-lg font-mono">@(_lastGpsData?.Longitude.ToString("F6") ?? "0.000000")</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm font-medium text-gray-500">Current / Total</span>
+                        <div class="font-bold">
+                            <span class="text-lg">@(_currentMileage.ToString("#,##0.0")) / @(_selectedVehicle?.mileage.GetValueOrDefault(0)) KM</span>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all duration-300" 
+                                     style="width: @((_currentMileage / (_selectedVehicle?.mileage.GetValueOrDefault(1)) * 100))%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status and Controls -->
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <span class="relative flex h-3 w-3">
+                            <span class="@(_lastGpsData != null ? "animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" : "")"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 @(_lastGpsData != null ? "bg-green-500" : "bg-gray-400")"></span>
+                        </span>
+                        <span class="text-sm font-medium @(_lastGpsData != null ? "text-green-600" : "text-gray-500")">
+                            @(_lastGpsData != null ? "Live Tracking" : "Connecting...")
+                        </span>
+                    </div>
+                    <button class="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-sm border border-gray-200" 
+                            @onclick="ClearTripLine">
+                        <i class="fas fa-eraser"></i>
+                        <span>Clear Trip</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex">
+        <!-- Vehicles Sidebar -->
+        <div class="@(showVehiclesList ? "w-72" : "w-0") transition-all duration-300 overflow-hidden h-[calc(100vh-120px)] sticky top-6">
+            <div class="p-6 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-100 h-full flex flex-col">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex-shrink-0">Available Vehicles</h3>
+                @if (_isLoading)
+                {
+                    <div class="flex flex-col items-center justify-center p-6 flex-1">
+                        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="mt-3 text-gray-600">Loading vehicles...</p>
+                    </div>
+                }
+                else if (_computedVehicles == null || !_computedVehicles.Any())
+                {
+                    <p class="text-gray-500">No vehicles available</p>
+                }
+                else
+                {
+                    <div class="space-y-3 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-amber-200 scrollbar-track-gray-100">
+                        @foreach (var item in _computedVehicles)
+                        {
+                            <div class="flex items-center justify-between p-4 rounded-xl cursor-pointer hover:bg-gray-50 transition-all duration-300
+                                      @(selectedVehicleId == item.Vehicle.id.ToString() ? "bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 shadow-sm" : "border border-gray-100")"
+                                 @onclick="() => SelectVehicle(item.Vehicle.id.ToString())">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-car text-amber-500"></i>
+                                    <span class="font-medium text-gray-700">@item.Vehicle.name</span>
+                                </div>
+                                <span class="h-2.5 w-2.5 rounded-full @(item.IsActive ? "bg-green-500" : "bg-gray-300") shadow-sm"></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Map Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                        <div class="relative h-[600px]">
+                            <div id="map" class="h-full w-full"></div>
+                            @if (_isLoading || _lastGpsData == null)
+                            {
+                                <div class="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
+                                    <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="mt-4 text-gray-600 font-medium">@(_isLoading ? "Loading..." : "Connecting to GPS...")</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Incident Section -->
+                <div class="space-y-6">
+                    <!-- Incident Card -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 @GetAlertClass()">
+                        <div class="flex items-center gap-6">
+                            <div class="text-3xl">@GetIncidentIcon(_lastIncidentType)</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Incidents</h3>
+                                <div>
+                                    <div class="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">@_incidentCount</div>
+                                    <div class="text-sm font-medium text-gray-500">Total Incidents</div>
+                                    @if (!string.IsNullOrEmpty(_lastIncidentType))
+                                    {
+                                        <div class="mt-3 text-sm font-medium">
+                                            Last: @_lastIncidentType
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Incident Log -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6">
+                        <h3 class="text-xl font-bold mb-6">Incident Log</h3>
+                        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-amber-200 scrollbar-track-gray-100" @ref="logEntriesRef">
+                            @foreach (var log in _incidentLogs)
+                            {
+                                <div class="p-4 rounded-xl border @(log.Type.ToLower() == "severe" ? "bg-red-50/80 border-red-200" : "bg-yellow-50/80 border-yellow-200")">
+                                    <div class="flex items-center gap-4">
+                                        <div class="text-2xl">@GetIncidentIcon(log.Type)</div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <div class="font-bold text-base">@log.Type Incident</div>
+                                                <div class="text-sm font-medium text-gray-500">@log.Timestamp.ToString("HH:mm:ss")</div>
+                                            </div>
+                                            <div class="mt-3 space-y-1.5 text-sm text-gray-600">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-tachometer-alt text-amber-500"></i>
+                                                    <span>@log.PreviousSpeed.ToString("F1") → @log.CurrentSpeed.ToString("F1") km/h</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-clock text-amber-500"></i>
+                                                    <span>@(log.TimeDiff.ToString("F1"))s</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-map-marker-alt text-amber-500"></i>
+                                                    <span class="font-mono text-xs">@log.Latitude.ToString("F6"), @log.Longitude.ToString("F6")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly SemaphoreSlim _updateLock = new(1, 1);
+    private Dictionary<int, GpsData> _lastGpsDataByVehicle = new();
+    private List<Vehicle> _cachedVehicles;
+    private List<VehicleViewModel> _computedVehicles;
+    private double _averageSpeed;
+    private bool _isLoading;
+    private GpsData _lastGpsData
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(selectedVehicleId) || !int.TryParse(selectedVehicleId, out int vehicleId))
+                return null;
+            return _lastGpsDataByVehicle.TryGetValue(vehicleId, out var data) ? data : null;
+        }
+    }
+
+    private class VehicleViewModel
+    {
+        public Vehicle Vehicle { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    private HubConnection _hubConnection;
+    private IJSObjectReference _module;
+    private DotNetObjectReference<AdminGPS> _objRef;
+    private bool _isDisposed;
+    private bool _mapInitialized;
+    private int _incidentCount;
+    private string _lastIncidentType;
+    private bool _incidentAlert;
+    private double _topSpeed = 0;
+    private Queue<double> _speedHistory = new(100); // Keep last 100 speed readings for average
+    private ElementReference logEntriesRef;
+    private List<IncidentLog> _incidentLogs = new();  // Initialize the list
+    private List<Vehicle> vehicles;
+    private string selectedVehicleId;
+    private bool showVehiclesList = true;
+    private double _currentMileage = 0;
+    private Vehicle _selectedVehicle;
+
+    private async Task UpdateGpsDataAsync(string vehicleId, GpsData newData)
+    {
+        try
+        {
+            await _updateLock.WaitAsync();
+            if (int.TryParse(vehicleId, out int id))
+            {
+                _lastGpsDataByVehicle[id] = newData;
+                await UpdateSpeedStatistics(newData);
+                if (_mapInitialized)
+                {
+                    await UpdateMapMarkerAsync();
+                }
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating GPS data: {ex.Message}");
+        }
+        finally
+        {
+            _updateLock.Release();
+        }
+    }
+
+    private async Task UpdateSpeedStatistics(GpsData newData)
+    {
+        if (newData == null) return;
+        
+        _speedHistory.Enqueue(newData.Speed);
+        if (_speedHistory.Count > 100) // Keep last 100 readings
+        {
+            _speedHistory.Dequeue();
+        }
+        
+        _topSpeed = Math.Max(_topSpeed, newData.Speed);
+        _averageSpeed = _speedHistory.Any() ? _speedHistory.Average() : 0;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _cachedVehicles = await DbContext.Vehicles.ToListAsync();
+            await UpdateVehiclesList();
+            if (_cachedVehicles.Any())
+            {
+                selectedVehicleId = _cachedVehicles.First().id.ToString();
+            }
+            
+            await InitializeHubConnection();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task UpdateVehiclesList()
+    {
+        try
+        {
+            var today = DateTime.Today;
+            var activeReservations = await DbContext.Reservation
+                .Where(r => r.StartDate.Date <= today && 
+                           r.EndDate.Date >= today &&
+                           r.Status == "Approved")
+                .Select(r => r.VehicleId)
+                .ToListAsync();
+
+            _computedVehicles = _cachedVehicles
+                .Select(v => new VehicleViewModel
+                {
+                    Vehicle = v,
+                    IsActive = activeReservations.Contains(v.id)
+                })
+                .OrderByDescending(x => x.IsActive)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating vehicles list: {ex.Message}");
+        }
+    }
+
+    private async Task UpdateMapMarkerAsync()
+    {
+        if (_module != null && _mapInitialized && _lastGpsData != null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("updateMarkerPosition",
+                    _lastGpsData.Latitude,
+                    _lastGpsData.Longitude,
+                    _lastGpsData.Speed);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating marker: {ex.Message}");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateMileage(double distance)
+    {
+        try
+        {
+            _currentMileage = distance;
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating mileage: {ex.Message}");
+        }
+    }
+
+    private async Task InitializeMapModule()
+    {
+        try
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/leafletMap.js");
+            await _module.InvokeVoidAsync("loadLeaflet");
+            bool initialized = await _module.InvokeAsync<bool>("initializeLeafletMap");
+            _mapInitialized = initialized;
+
+            // Set up the .NET reference for JavaScript callbacks
+            await JSRuntime.InvokeVoidAsync("window.setDotNetHelper", DotNetObjectReference.Create(this));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing map module: {ex.Message}");
+            _mapInitialized = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await InitializeMapModule();
+                if (_lastGpsData != null)
+                {
+                    await UpdateMapMarkerAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnAfterRenderAsync: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task InitializeHubConnection()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/gpshub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<GpsData>("ReceiveGpsUpdate", (gpsData) =>
+        {
+            InvokeAsync(async () => 
+            {
+                await UpdateGpsDataAsync(gpsData.VehicleId.ToString(), gpsData);
+            });
+        });
+
+        _hubConnection.On<object>("IncidentDetected", async (data) =>
+        {
+            try 
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                var incidentData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+                
+                // Only process incident if it's for the selected vehicle
+                var vehicleId = incidentData["vehicleId"].GetInt32();
+                if (selectedVehicleId != vehicleId.ToString()) return;
+
+                await _updateLock.WaitAsync();
+                try
+                {
+                    _incidentCount = incidentData["count"].GetInt32();
+                    _lastIncidentType = incidentData["type"].GetString();
+                    _incidentAlert = true;
+
+                    // Create new incident log
+                    var newIncident = new IncidentLog
+                    {
+                        Timestamp = DateTime.UtcNow,
+                        Type = _lastIncidentType,
+                        PreviousSpeed = incidentData["previousSpeed"].GetDouble(),
+                        CurrentSpeed = incidentData["currentSpeed"].GetDouble(),
+                        TimeDiff = incidentData["timeDiff"].GetDouble(),
+                        Latitude = incidentData["location"].GetProperty("latitude").GetDouble(),
+                        Longitude = incidentData["location"].GetProperty("longitude").GetDouble(),
+                        VehicleId = vehicleId  // Use the actual vehicle ID from the incident data
+                    };
+
+                    // Save to database
+                    DbContext.IncidentLogs.Add(newIncident);
+                    await DbContext.SaveChangesAsync();
+
+                    // Add to in-memory list
+                    _incidentLogs.Insert(0, newIncident);
+                    while (_incidentLogs.Count > 20)
+                    {
+                        _incidentLogs.RemoveAt(_incidentLogs.Count - 1);
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                    await ScrollToBottom();
+                }
+                finally
+                {
+                    _updateLock.Release();
+                }
+
+                // Delay alert reset
+                await Task.Delay(2000);
+                await _updateLock.WaitAsync();
+                try
+                {
+                    _incidentAlert = false;
+                    await InvokeAsync(StateHasChanged);
+                }
+                finally
+                {
+                    _updateLock.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing incident data: {ex.Message}");
+            }
+        });
+
+        await _hubConnection.StartAsync();
+        Console.WriteLine("SignalR Connected!");
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", logEntriesRef);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error scrolling to bottom: {ex.Message}");
+        }
+    }
+
+    private async Task SelectVehicle(string vehicleId)
+    {
+        selectedVehicleId = vehicleId;
+        _selectedVehicle = _cachedVehicles?.FirstOrDefault(v => v.id.ToString() == vehicleId);
+        _currentMileage = 0; // Reset mileage when switching vehicles
+        
+        // Clear speed history and incidents when switching vehicles
+        _speedHistory.Clear();
+        _topSpeed = 0;
+        _incidentLogs.Clear();
+        _incidentCount = 0;
+        _lastIncidentType = null;
+        
+        // Load existing incidents for the selected vehicle
+        if (_selectedVehicle != null)
+        {
+            var vehicleIncidents = await DbContext.IncidentLogs
+                .Where(log => log.VehicleId == _selectedVehicle.id)
+                .OrderByDescending(log => log.Timestamp)
+                .Take(20)
+                .ToListAsync();
+            _incidentLogs.AddRange(vehicleIncidents);
+            _incidentCount = vehicleIncidents.Count;
+            if (vehicleIncidents.Any())
+            {
+                _lastIncidentType = vehicleIncidents.First().Type;
+            }
+        }
+        
+        // Update map marker if we have data for this vehicle
+        if (_lastGpsDataByVehicle.ContainsKey(int.Parse(vehicleId)))
+        {
+            await UpdateMapMarkerAsync();
+        }
+        
+        StateHasChanged();
+    }
+
+    private string GetAlertClass() => _incidentAlert 
+        ? _lastIncidentType switch
+        {
+            "Braking" => "alert",
+            "Acceleration" => "alert-accel",
+            "Overspeeding" => "alert-speed",
+            _ => ""
+        }
+        : "";
+
+    private string GetIncidentIcon(string type) => type switch
+    {
+        "Braking" => "🛑",
+        "Acceleration" => "⚡",
+        "Overspeeding" => "🏎️",
+        _ => "⚠️"
+    };
+
+    private async Task ToggleVehiclesList()
+    {
+        showVehiclesList = !showVehiclesList;
+    }
+
+    private async Task ClearTripLine()
+    {
+        try
+        {
+            if (_module != null && _mapInitialized)
+            {
+                await _module.InvokeVoidAsync("clearTripLine");
+                _currentMileage = 0;
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Map module not initialized");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error clearing trip line: {ex.Message}");
+            // Try to reinitialize the module if we lost connection
+            if (ex is JSDisconnectedException)
+            {
+                try
+                {
+                    _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/leafletMap.js");
+                    await _module.InvokeVoidAsync("loadLeaflet");
+                    await _module.InvokeVoidAsync("initializeLeafletMap");
+                    await _module.InvokeVoidAsync("clearTripLine");
+                    _currentMileage = 0;
+                    StateHasChanged();
+                }
+                catch (Exception reinitEx)
+                {
+                    Console.WriteLine($"Error reinitializing map: {reinitEx.Message}");
+                }
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+        
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+        
+        _objRef?.Dispose();
+        _updateLock?.Dispose();
+    }
+}

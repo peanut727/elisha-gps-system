@@ -1,0 +1,730 @@
+@page "/reservation/{vehicleId:int}"
+@rendermode InteractiveServer
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@inject IWebHostEnvironment Environment
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JSRuntime
+@using elisha_gps_reservation_system.Components.Layout
+@attribute [Authorize]
+
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        light: '#f7d4a1',
+                        DEFAULT: '#f3b755',
+                        dark: '#d99b35'
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Reservation Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
+                <EditForm Model="@reservationModel" OnValidSubmit="ReserveNow">
+                    <DataAnnotationsValidator />
+                    
+                    <!-- Rental Information -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Rental Information</h2>
+                                <p class="text-gray-500 mt-1">Select your preferred rental dates and times</p>
+                            </div>
+                            <span class="px-4 py-2 bg-brand-light text-brand-dark rounded-full text-sm font-medium">
+                                Step 1 of 3
+                            </span>
+                        </div>
+
+                        <!-- Toggle Buttons -->
+                        <div class="flex justify-center mb-8">
+                            <div class="bg-gray-100/50 backdrop-blur-sm p-2 rounded-2xl shadow-lg shadow-gray-200/50">
+                                <div class="relative inline-flex rounded-xl bg-white/80 p-1 border border-gray-100">
+                                    <div class="absolute transition-all duration-200 ease-in-out"
+                                         style="@(isAddMode ? "left: 4px" : "left: 50%"); width: calc(50% - 8px); height: calc(100% - 8px); background-color: #f3b755; border-radius: 0.75rem; transform: translateX(@(!isAddMode ? "4px" : "0")); z-index: 0;">
+                                    </div>
+                                    <button type="button" 
+                                            class="@(isAddMode ? "text-white" : "text-gray-600") relative z-10
+                                                   px-6 py-2.5 rounded-xl text-sm font-medium 
+                                                   transition-all duration-200 ease-in-out hover:scale-[0.98] active:scale-95
+                                                   flex items-center space-x-2 min-w-[120px] justify-center"
+                                            @onclick="() => ToggleMode(true)">
+                                        <i class="fas fa-car-side text-lg"></i>
+                                        <span>Pickup</span>
+                                    </button>
+                                    <button type="button" 
+                                            class="@(!isAddMode ? "text-white" : "text-gray-600") relative z-10
+                                                   px-6 py-2.5 rounded-xl text-sm font-medium 
+                                                   transition-all duration-200 ease-in-out hover:scale-[0.98] active:scale-95
+                                                   flex items-center space-x-2 min-w-[120px] justify-center"
+                                            @onclick="() => ToggleMode(false)">
+                                        <i class="fas fa-map-marker-alt text-lg"></i>
+                                        <span>Dropoff</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (isAddMode)
+                        {
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" for="start-date">
+                                        <i class="fas fa-calendar-alt mr-2 text-[#f3b755]"></i>Start Date
+                                    </label>
+                                    <div class="relative" @onclick="() => showStartDateCalendar = true">
+                                        <input type="text" readonly 
+                                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                      bg-white/50 backdrop-blur-sm
+                                                      text-gray-700 placeholder-gray-400
+                                                      focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                      hover:border-[#f3b755]/50
+                                                      transition-all duration-200
+                                                      shadow-sm
+                                                      cursor-pointer"
+                                               value="@reservationModel.StartDate.ToString("MMM dd, yyyy")" />
+                                        <i class="fas fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" for="pickup-time">
+                                        <i class="fas fa-clock mr-2 text-[#f3b755]"></i>Pickup Time
+                                    </label>
+                                    <input type="time" id="pickup-time" 
+                                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                  bg-white/50 backdrop-blur-sm
+                                                  text-gray-700 placeholder-gray-400
+                                                  focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                  hover:border-[#f3b755]/50
+                                                  transition-all duration-200
+                                                  shadow-sm"
+                                           @bind-value="pickupTime"/>
+                                </div>
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" for="end-date">
+                                        <i class="fas fa-calendar-check mr-2 text-[#f3b755]"></i>End Date
+                                    </label>
+                                    <div class="relative" @onclick="() => showEndDateCalendar = true">
+                                        <input type="text" readonly 
+                                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                      bg-white/50 backdrop-blur-sm
+                                                      text-gray-700 placeholder-gray-400
+                                                      focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                      hover:border-[#f3b755]/50
+                                                      transition-all duration-200
+                                                      shadow-sm
+                                                      cursor-pointer"
+                                               value="@reservationModel.EndDate.ToString("MMM dd, yyyy")" />
+                                        <i class="fas fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" for="end-time">
+                                        <i class="fas fa-hourglass-end mr-2 text-[#f3b755]"></i>End Time
+                                    </label>
+                                    <input type="time" id="end-time" 
+                                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                  bg-white/50 backdrop-blur-sm
+                                                  text-gray-700 placeholder-gray-400
+                                                  focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                  hover:border-[#f3b755]/50
+                                                  transition-all duration-200
+                                                  shadow-sm"
+                                           @bind-value="endTime"/>
+                                </div>
+                            </div>
+
+                        }
+                        else
+                        {
+                            <div class="grid grid-cols-1 gap-6">
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" for="location">
+                                        <i class="fas fa-map-marker-alt mr-2 text-[#f3b755]"></i>Location
+                                    </label>
+                                    <input type="text" id="location" 
+                                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                  bg-white/50 backdrop-blur-sm
+                                                  text-gray-700 placeholder-gray-400
+                                                  focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                  hover:border-[#f3b755]/50
+                                                  transition-all duration-200
+                                                  shadow-sm"
+                                           @bind-value="reservationModel.Location"
+                                           placeholder="Enter dropoff location" />
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div class="relative">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" for="dropoff-date">
+                                            <i class="fas fa-calendar-alt mr-2 text-[#f3b755]"></i>Dropoff Date
+                                        </label>
+                                        <div class="relative" @onclick="() => showStartDateCalendar = true">
+                                            <input type="text" readonly 
+                                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                          bg-white/50 backdrop-blur-sm
+                                                          text-gray-700 placeholder-gray-400
+                                                          focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                          hover:border-[#f3b755]/50
+                                                          transition-all duration-200
+                                                          shadow-sm
+                                                          cursor-pointer"
+                                                   value="@reservationModel.StartDate.ToString("MMM dd, yyyy")" />
+                                            <i class="fas fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" for="dropoff-time">
+                                            <i class="fas fa-clock mr-2 text-[#f3b755]"></i>Dropoff Time
+                                        </label>
+                                        <input type="time" id="dropoff-time" 
+                                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 
+                                                      bg-white/50 backdrop-blur-sm
+                                                      text-gray-700 placeholder-gray-400
+                                                      focus:border-[#f3b755] focus:ring focus:ring-[#f3b755]/20 
+                                                      hover:border-[#f3b755]/50
+                                                      transition-all duration-200
+                                                      shadow-sm"
+                                               @bind-value="dropoffTime"/>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Required Documents -->
+                    <div class="mb-8 pt-8 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Required Documents</h2>
+                                <p class="text-gray-500 mt-1">Please attach the following documents to proceed</p>
+                            </div>
+                            <span class="px-4 py-2 bg-brand-light text-brand-dark rounded-full text-sm font-medium">
+                                Step 2 of 3
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            @foreach (var label in FileLabels)
+                            {
+                                <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-brand transition-colors">
+                                    <label class="flex flex-col items-center cursor-pointer">
+                                        <i class="fas fa-upload text-2xl text-brand mb-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">@label</span>
+                                        <small class="text-gray-500">@(GetUploadStatus(label))</small>
+                                        <InputFile OnChange="@(e => OnInputFileChange(e, label))" 
+                                                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                    </label>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ErrorMessage))
+                        {
+                            <div class="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                                <div class="flex items-center text-red-700">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    <span class="text-sm">@ErrorMessage</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Confirmation -->
+                    <div class="pt-8 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Confirmation</h2>
+                                <p class="text-gray-500 mt-1">Review your booking details and confirm</p>
+                            </div>
+                            <span class="px-4 py-2 bg-brand-light text-brand-dark rounded-full text-sm font-medium">
+                                Step 3 of 3
+                            </span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <InputCheckbox id="verify" @bind-Value="agreedToTerms"
+                                             class="h-4 w-4 text-brand border-gray-300 rounded focus:ring-brand" />
+                                <label for="verify" class="text-sm text-gray-700">
+                                    I confirm that all the provided information is correct
+                                </label>
+                            </div>
+
+                            @if (!imageSelected)
+                            {
+                                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                    <div class="flex items-center text-yellow-700">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        <span class="text-sm">Please upload the required documents to proceed with your reservation.</span>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="flex justify-end space-x-4">
+                                <button type="submit" 
+                                        class="px-6 py-2.5 bg-[#f3b755] text-white rounded-xl
+                                               hover:bg-[#f3b755]/90 transition-colors
+                                               font-medium">
+                                    Reserve Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+
+        @if (showStartDateCalendar)
+        {
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @onclick:stopPropagation>
+                <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4" @onclick:stopPropagation>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Select Start Date</h3>
+                        <button type="button" @onclick="() => showStartDateCalendar = false" 
+                                class="text-gray-400 hover:text-gray-500 transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <DynamicCalendar vehicleId="@vehicleId" 
+                                    OnDateSelected="OnStartDateSelected" />
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" @onclick="() => showStartDateCalendar = false"
+                                class="px-4 py-2 bg-[#f3b755] text-white rounded-xl
+                                       hover:bg-[#f3b755]/90 transition-colors
+                                       font-medium">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showEndDateCalendar)
+        {
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @onclick:stopPropagation>
+                <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4" @onclick:stopPropagation>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Select End Date</h3>
+                        <button type="button" @onclick="() => showEndDateCalendar = false" 
+                                class="text-gray-400 hover:text-gray-500 transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <DynamicCalendar vehicleId="@vehicleId" 
+                                    OnDateSelected="OnEndDateSelected" />
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" @onclick="() => showEndDateCalendar = false"
+                                class="px-4 py-2 bg-[#f3b755] text-white rounded-xl
+                                       hover:bg-[#f3b755]/90 transition-colors
+                                       font-medium">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Right Column - Booking Summary -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Booking Summary</h3>
+                <p class="text-sm text-gray-500 mb-6">Final price may vary based on rental duration and vehicle selection.</p>
+
+                @if (car != null)
+                {
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <img src="@car.imgsrc" alt="@car.name" class="w-full h-48 object-cover rounded-lg mb-4"/>
+                        <div class="space-y-2">
+                            <h4 class="text-lg font-semibold text-gray-900">@car.name</h4>
+                            <!-- Add more car details here -->
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-center justify-center h-48 bg-gray-50 rounded-xl">
+                        <p class="text-gray-500">Loading vehicle details...</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @onclick="() => ErrorMessage = null">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @onclick:stopPropagation>
+            <div class="flex items-start mb-4">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Reservation Problem</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">@ErrorMessage</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button type="button" 
+                        @onclick="() => ErrorMessage = null"
+                        class="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int vehicleId { get; set; }
+    private Vehicle? car;
+    private bool isAddMode = true;
+    private const int MaxFileUploads = 2;
+    private List<string> FileLabels = new() { "Driver's License", "Passport", "Birth Certificate", "Proof of Billing", "Postal ID", "Government ID" };
+    private Dictionary<string, IBrowserFile> UploadedFiles = new();
+    private string? UploadStatus { get; set; }
+    private string? ErrorMessage { get; set; }
+    private bool imageSelected => UploadedFiles.Count > 0;
+
+    private string? UserId { get; set; } = "Anon";
+    private const long MaxAllowedSize = 5242880; // 5MB in bytes
+    private readonly string[] permittedImageTypes = { "image/jpeg", "image/png", "image/gif" };
+
+    private bool agreedToTerms = false;
+    private DateTime pickupTime;
+    private DateTime endTime;
+    private DateTime dropoffTime;
+    private ReservationModel reservationModel = new()
+    {
+        UserId = 0,
+        VehicleId = 0,
+        StartDate = DateTime.Now,
+        EndDate = DateTime.Now,
+        Status = null,
+        PickUpOrDropOff = null
+    };
+    private UploadModel uploadModel = new();
+
+    private List<DateOnly> disabledDates = new();
+    private string disabledDatesString = string.Empty;
+
+    private bool showDateErrorModal = false;
+    private bool showStartDateCalendar;
+    private bool showEndDateCalendar;
+
+    private void CloseDateErrorModal()
+    {
+        showDateErrorModal = false;
+        StateHasChanged();
+    }
+
+    private void ToggleMode(bool addMode)
+    {
+        isAddMode = addMode;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = HttpContextAccessor.HttpContext?.User;
+            if (user != null)
+            {
+                UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+                foreach (var claim in user.Claims)
+                {
+                    Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+                }
+
+                Console.WriteLine($"Logged in UserId: {UserId}");
+            }
+            else
+            {
+                UserId = "Anonymous";
+            }
+
+            car = await DbContext.Vehicles.FindAsync(vehicleId);
+            reservationModel.VehicleId = vehicleId;
+            reservationModel.UserId = int.Parse(UserId);
+            Console.WriteLine($"Vehicle Id: {vehicleId}, Reservation UserId: {reservationModel.UserId}");
+
+            // Get all reservations for the selected vehicle
+            var reservations = await DbContext.Reservation
+                .Where(r => r.VehicleId == vehicleId && r.Status != "Cancelled")
+                .ToListAsync();
+            
+            // Create a list of all dates that are already reserved
+            disabledDates = new List<DateOnly>();
+            foreach (var reservation in reservations)
+            {
+                var startDate = DateOnly.FromDateTime(reservation.StartDate);
+                var endDate = DateOnly.FromDateTime(reservation.EndDate);
+                
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    disabledDates.Add(date);
+                }
+            }
+
+            // Convert disabled dates to a string for the datepicker
+            disabledDatesString = string.Join(",", disabledDates.Select(d => d.ToString("yyyy-MM-dd")));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task OnStartDateSelected(DateTime selectedDate)
+    {
+        showStartDateCalendar = false;
+        var newStartDate = selectedDate.Date.Add(pickupTime.TimeOfDay);
+        reservationModel.StartDate = newStartDate;
+
+        // If start date is greater than or equal to end date, set end date to start date + 1 day
+        if (reservationModel.StartDate > reservationModel.EndDate)
+        {
+            reservationModel.EndDate = newStartDate.AddDays(1);
+            // Keep the same end time
+            reservationModel.EndDate = reservationModel.EndDate.Date.Add(endTime.TimeOfDay);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnEndDateSelected(DateTime selectedDate)
+    {
+        showEndDateCalendar = false;
+        var newEndDate = selectedDate.Date.Add(endTime.TimeOfDay);
+        
+        // If end date is less than start date, don't allow the change
+        if (newEndDate < reservationModel.StartDate)
+        {
+            // Set end date to start date + 1 day
+            reservationModel.EndDate = reservationModel.StartDate.AddDays(1);
+            reservationModel.EndDate = reservationModel.EndDate.Date.Add(endTime.TimeOfDay);
+        }
+        else
+        {
+            reservationModel.EndDate = newEndDate;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnStartDateChanged(DateTime? date)
+    {
+        if (date.HasValue)
+        {
+            reservationModel.StartDate = date.Value;
+            // Only update the end date if it's before the start date
+            if (reservationModel.EndDate < reservationModel.StartDate)
+            {
+                reservationModel.EndDate = reservationModel.StartDate;
+            }
+        }
+    }
+
+    private async Task OnEndDateChanged(DateTime? date)
+    {
+        if (date.HasValue)
+        {
+            reservationModel.EndDate = date.Value;
+            // Only update the start date if it's after the end date
+            if (reservationModel.StartDate > reservationModel.EndDate)
+            {
+                reservationModel.StartDate = reservationModel.EndDate;
+            }
+        }
+    }
+
+    private bool IsDateDisabled(string dateStr)
+    {
+        if (DateOnly.TryParse(dateStr, out DateOnly date))
+        {
+            return disabledDates.Contains(date);
+        }
+        return false;
+    }
+
+    private string GetUploadStatus(string label)
+    {
+        if (UploadedFiles.ContainsKey(label))
+        {
+            return $"Selected: {UploadedFiles[label].Name}";
+        }
+        return "Click or drag files to upload";
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e, string label)
+    {
+        try
+        {
+            var file = e.File;
+            if (file == null)
+            {
+                ErrorMessage = "No file was selected.";
+                return;
+            }
+
+            // Check for file type
+            if (!permittedImageTypes.Contains(file.ContentType))
+            {
+                ErrorMessage = "Invalid file type. Only image files are allowed.";
+                return;
+            }
+
+            // Check for file size
+            if (file.Size > MaxAllowedSize)
+            {
+                ErrorMessage = $"File size exceeds the maximum allowed size of {MaxAllowedSize / (1024 * 1024)} MB.";
+                return;
+            }
+
+            // Add or update the file for this label
+            UploadedFiles[label] = file;
+            ErrorMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"File selection error: {ex.Message}");
+            ErrorMessage = $"File selection error: {ex.Message}";
+        }
+    }
+
+    private async Task HandleFileUploads()
+    {
+        if (UploadedFiles.Count == 0)
+        {
+            ErrorMessage = "Please upload at least one required document.";
+            return;
+        }
+
+        try
+        {
+            var uploadedPaths = new List<string>();
+            foreach (var (label, file) in UploadedFiles)
+            {
+                var sanitizedUserId = string.Concat(UserId.Split(Path.GetInvalidFileNameChars()));
+                var sanitizedFileName = string.Concat(file.Name.Split(Path.GetInvalidFileNameChars()));
+                var userFolderPath = Path.Combine(Environment.WebRootPath, "uploads", sanitizedUserId);
+
+                Directory.CreateDirectory(userFolderPath);
+
+                var filePath = Path.Combine(userFolderPath, $"{Guid.NewGuid()}_{sanitizedFileName}");
+                uploadedPaths.Add(filePath);
+
+                await using var stream = file.OpenReadStream(MaxAllowedSize);
+                await using var fileStream = new FileStream(filePath, FileMode.Create);
+                await stream.CopyToAsync(fileStream);
+            }
+            
+            UploadStatus = "Files uploaded successfully!";
+            ErrorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"File upload error: {ex.Message}");
+            ErrorMessage = $"File upload error: {ex.Message}";
+            throw; // Re-throw to handle in ReserveNow
+        }
+    }
+
+    private async Task HandleReservationSubmit()
+    {
+        try
+        {
+            // Combine Date and Time
+            reservationModel.StartDate = reservationModel.StartDate.Date.Add(pickupTime.TimeOfDay);
+            reservationModel.EndDate = reservationModel.EndDate.Date.Add(endTime.TimeOfDay);
+
+            // Check if dates overlap with existing reservations
+            var conflictingReservations = await DbContext.Reservation
+                .Where(r => r.VehicleId == vehicleId 
+                            && r.EndDate >= reservationModel.StartDate 
+                            && r.StartDate <= reservationModel.EndDate)
+                .ToListAsync();
+
+            if (conflictingReservations.Any())
+            {
+                ErrorMessage = "The selected dates overlap with an existing reservation. Please choose different dates.";
+                return;
+            }
+
+            // Create a new Reservation
+            var reservation = new ReservationModel
+            {
+                VehicleId = vehicleId,
+                UserId = int.Parse(UserId),
+                StartDate = reservationModel.StartDate,
+                EndDate = reservationModel.EndDate,
+                Status = "Pending",
+                PickUpOrDropOff = isAddMode ? "Pickup" : "Dropoff",
+                Location = reservationModel.Location,
+            };
+
+            DbContext.Reservation.Add(reservation);
+            await DbContext.SaveChangesAsync();
+
+            // Create notification for the user
+            var notification = new NotificationModel
+            {
+                UserID = reservation.UserId,
+                ReservationID = reservation.ReservationId,
+                NotifType = "RESERVATION",
+                Title = "Reservation Pending",
+                Content = $"Your reservation for {car?.name} is pending confirmation. We will notify you once it's confirmed.",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            DbContext.Notifications.Add(notification);
+            await DbContext.SaveChangesAsync();
+
+            // Redirect to some confirmation page or notify the user of success
+            Navigation.NavigateTo("/ReservationSuccess");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Reservation submission error: {ex.Message}");
+            ErrorMessage = $"Reservation submission error: {ex.Message}";
+        }
+    }
+
+    private async Task ReserveNow()
+    {
+        if (!agreedToTerms)
+        {
+            ErrorMessage = "Please confirm that all the provided information is correct by checking the checkbox.";
+            return;
+        }
+
+        try
+        {
+            await HandleFileUploads();
+            await HandleReservationSubmit();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during reservation: {ex.Message}");
+            ErrorMessage = $"Error during reservation: {ex.Message}";
+        }
+    }
+
+    private class UploadModel
+    {
+    }
+}

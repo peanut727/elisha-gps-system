@@ -1,0 +1,910 @@
+@page "/ManageReservations"
+@inject ApplicationDbContext DbContext
+@inject IWebHostEnvironment Environment
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 font-jakarta pb-8">
+    <div class="relative mb-8 pt-6">
+        <h1 class="text-2xl font-bold text-gray-900 font-jakarta">Manage Reservations</h1>
+        <div class="absolute -bottom-2 left-0 w-20 h-1 bg-[#e39a3c] rounded-full"></div>
+    </div>
+    
+    @if (isLoading)
+    {
+        <div class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#e39a3c]"></div>
+            <p class="ml-3 text-gray-600 font-jakarta">Loading reservations...</p>
+        </div>
+    }
+    else if (error != null)
+    {
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r" role="alert">
+            <div class="flex">
+                <div class="flex-shrink-0 py-1"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="ml-3">
+                    <p class="text-sm">@error</p>
+                    <button class="text-sm font-semibold underline hover:text-red-800 transition-colors" @onclick="RetryLoading">Retry</button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Control Panel -->
+        <div class="mb-6 space-y-4 lg:space-y-0">
+            <!-- Search and Pagination -->
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                    <!-- Search Bar -->
+                    <div class="relative flex-1 min-w-0 max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-base"></i>
+                        </div>
+                        <input type="text" 
+                               class="block w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl
+                                      focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] 
+                                      text-base placeholder-gray-400 transition-colors"
+                               placeholder="Search by name or vehicle..." 
+                               @bind-value="searchTerm" 
+                               @bind-value:event="oninput"/>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center gap-2 sm:justify-start">
+                        <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                                @onclick="PreviousPage" disabled="@(!CanGoBack)">
+                            <i class="fas fa-chevron-left mr-1"></i>
+                        </button>
+                        <span class="text-sm text-gray-700 whitespace-nowrap">Page @CurrentPage of @TotalPages</span>
+                        <button class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                                @onclick="NextPage" disabled="@(!CanGoNext)">
+                            <i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters and View Toggle -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <select @bind="statusFilter"
+                            class="pl-4 pr-8 py-2.5 border border-gray-300 rounded-xl bg-white
+                                   focus:ring-2 focus:ring-[#e39a3c]/50 focus:border-[#e39a3c] 
+                                   text-base text-gray-700 min-w-[140px]">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+
+                    <label class="flex items-center gap-2 text-gray-700 whitespace-nowrap">
+                        <input type="checkbox" @bind="showIds" 
+                               class="form-checkbox h-5 w-5 text-[#e39a3c] rounded border-gray-300 focus:ring-[#e39a3c]"/>
+                        <span>Show IDs</span>
+                    </label>
+
+                    <div class="flex gap-2">
+                        <button type="button" 
+                                class="px-3 py-2 border border-gray-300 rounded-lg transition-colors duration-200
+                                       @(showCard ? "" : "bg-[#e39a3c] text-white border-[#e39a3c]")" 
+                                @onclick="() => ToggleCardContent(false)">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button type="button" 
+                                class="px-3 py-2 border border-gray-300 rounded-lg transition-colors duration-200
+                                       @(showCard ? "bg-[#e39a3c] text-white border-[#e39a3c]" : "")" 
+                                @onclick="() => ToggleCardContent(true)">
+                            <i class="fas fa-tablet-screen-button"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View -->
+        @if (!showCard)
+        {
+            <div class="overflow-hidden bg-white rounded-xl shadow-md border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 font-jakarta">
+                        <thead class="bg-[#e39a3c]">
+                            <tr>
+                                @if (showIds)
+                                {
+                                    <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">ID</th>   
+                                }
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Customer Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Phone Number</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Vehicle Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Start Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">End Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-lg font-semibold text-white tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                        @foreach (var reservation in FilteredPagedReservations)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                @if (showIds)
+                                {
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@reservation.ReservationId</td>   
+                                }
+                                <td class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900">@customerNames[reservation.UserId]</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-base text-gray-500">@customerNumber[reservation.UserId]</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-base text-gray-500">@customerVehicle[reservation.VehicleId]</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-base text-gray-500">@reservation.StartDate.ToString("MMM dd yyyy")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-base text-gray-500">@reservation.EndDate.ToString("MMM dd yyyy")</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full
+                                             @(reservation.Status == "Confirmed" ? "bg-green-100 text-green-800" :
+                                               reservation.Status == "Pending" ? "bg-yellow-100 text-yellow-800" :
+                                               "bg-red-100 text-red-800")">
+                                        @reservation.Status
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-base space-x-2">
+                                    @if (reservation.Status == "Pending")
+                                    {
+                                        <div class="relative inline-block group">
+                                            <button class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                     text-white bg-blue-500 hover:bg-blue-600
+                                                     transition-colors duration-200 shadow-sm" 
+                                                @onclick="() => ViewIDs(reservation)"
+                                                aria-label="View identification documents">
+                                                <i class="fas fa-id-card"></i>
+                                            </button>
+                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                                View ID Documents
+                                            </div>
+                                        </div>
+                                        <div class="relative inline-block group">
+                                            <button class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                     text-white bg-green-500 hover:bg-green-600
+                                                     transition-colors duration-200 shadow-sm" 
+                                                @onclick="() => ConfirmReservation(reservation)"
+                                                aria-label="Confirm reservation">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                                Confirm Reservation
+                                            </div>
+                                        </div>
+                                        <div class="relative inline-block group">
+                                            <button class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                     text-white bg-red-500 hover:bg-red-600 
+                                                     transition-colors duration-200 shadow-sm" 
+                                                @onclick="() => CancelReservation(reservation)"
+                                                aria-label="Cancel reservation">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                                Cancel Reservation
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="relative inline-block group">
+                                        <button class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                 text-white bg-purple-500 hover:bg-purple-600
+                                                 transition-colors duration-200 shadow-sm" 
+                                            @onclick="() => OpenVehiclePicModal(reservation)"
+                                            aria-label="View vehicle pictures">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            View Vehicle Pictures
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        <!-- Card View -->
+        else
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (var reservation in FilteredPagedReservations)
+                {
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">@customerNames[reservation.UserId]</h3>
+                                    <p class="text-sm text-gray-500">@customerNumber[reservation.UserId]</p>
+                                </div>
+                                <span class="px-3 py-1 text-sm font-semibold rounded-full
+                                         @(reservation.Status == "Confirmed" ? "bg-green-100 text-green-800" :
+                                           reservation.Status == "Pending" ? "bg-yellow-100 text-yellow-800" :
+                                           "bg-red-100 text-red-800")">
+                                    @reservation.Status
+                                </span>
+                            </div>
+
+                            <div class="border-l-4 border-[#f3b755] pl-4">
+                                <p class="text-gray-700 font-medium">@customerVehicle[reservation.VehicleId]</p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-calendar-alt w-5 text-blue-500"></i>
+                                    <p class="ml-2">Start: <span class="font-medium">@reservation.StartDate.ToString("MMM d yyyy, h:mm tt")</span></p>
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-calendar-check w-5 text-green-500"></i>
+                                    <p class="ml-2">End: <span class="font-medium">@reservation.EndDate.ToString("MMM d yyyy, h:mm tt")</span></p>
+                                </div>
+                            </div>
+
+                            <div class="grid @(reservation.Status == "Pending" ? "grid-cols-2" : "grid-cols-1") gap-2">
+                                @if (reservation.Status == "Pending")
+                                {
+                                    <div class="relative group/btn">
+                                        <button class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                                                     text-white bg-green-500 hover:bg-green-600
+                                                     transition-all duration-200 shadow-sm hover:shadow-md" 
+                                                @onclick="() => ConfirmReservation(reservation)">
+                                            <i class="fas fa-check mr-2"></i>
+                                            <span>Confirm</span>
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            Confirm Reservation
+                                        </div>
+                                    </div>
+
+                                    <div class="relative group/btn">
+                                        <button class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                                                     text-white bg-red-500 hover:bg-red-600 
+                                                     transition-all duration-200 shadow-sm hover:shadow-md" 
+                                                @onclick="() => CancelReservation(reservation)">
+                                            <i class="fas fa-times mr-2"></i>
+                                            <span>Cancel</span>
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            Cancel Reservation
+                                        </div>
+                                    </div>
+
+                                    <div class="relative group/btn col-span-2">
+                                        <button class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                                                     text-white bg-blue-500 hover:bg-blue-600
+                                                     transition-all duration-200 shadow-sm hover:shadow-md" 
+                                                @onclick="() => ViewIDs(reservation)">
+                                            <i class="fas fa-id-card mr-2"></i>
+                                            <span>View IDs</span>
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            View ID Documents
+                                        </div>
+                                    </div>
+                                }
+                                <div class="relative group/btn @(reservation.Status == "Pending" ? "col-span-2" : "")">
+                                    <button class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                                                 text-white bg-purple-500 hover:bg-purple-600
+                                                 transition-all duration-200 shadow-sm hover:shadow-md" 
+                                            @onclick="() => OpenVehiclePicModal(reservation)">
+                                        <i class="fas fa-camera mr-2"></i>
+                                        <span>Vehicle Pictures</span>
+                                    </button>
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                        View Vehicle Pictures
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@if (showImageModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-4xl mx-4">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h5 class="text-xl font-semibold">ID Images</h5>
+                    <button class="p-1 hover:bg-gray-100 rounded-full" @onclick="CloseImageModal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        @if (idImages != null && idImages.Any())
+                        {
+                            @foreach (var image in idImages)
+                            {
+                                <div class="relative group cursor-pointer" @onclick="() => ShowFullImage(image)">
+                                    <img src="@image" class="w-full h-48 object-cover rounded-lg" alt="ID Document" />
+                                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-25 rounded-lg transition-opacity"></div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 col-span-full text-center">No ID images found for this reservation.</p>
+                        }
+                    </div>
+                </div>
+                <div class="flex justify-end p-4 border-t">
+                    <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors" @onclick="CloseImageModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showBeforePicModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-4xl mx-4">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h5 class="text-xl font-semibold">Upload Vehicle Before Pictures</h5>
+                    <button class="p-1 hover:bg-gray-100 rounded-full" @onclick="CloseBeforePicModal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="sr-only">Choose files</span>
+                            <InputFile OnChange="@OnBeforeFileChange" multiple class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#f3b755] file:text-white
+                                hover:file:bg-[#e5a94a]
+                                cursor-pointer" />
+                        </label>
+
+                        @if (beforeUploadMessages.Any())
+                        {
+                            <div class="bg-blue-50 text-blue-700 p-4 rounded-lg">
+                                @foreach (var message in beforeUploadMessages)
+                                {
+                                    <div class="text-sm">@message</div>
+                                }
+                            </div>
+                        }
+
+                        @if (beforeImages.Any())
+                        {
+                            <div class="space-y-2">
+                                <h6 class="font-medium">Uploaded Images:</h6>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    @foreach (var image in beforeImages)
+                                    {
+                                        <div class="relative group" @onclick="() => ShowFullImage(image)">
+                                            <img src="@image" 
+                                                 class="w-full h-32 object-cover rounded-lg cursor-pointer" 
+                                                 alt="Vehicle Before Picture" />
+                                            <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-25 rounded-lg transition-opacity"></div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="flex justify-end p-4 border-t">
+                    <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors" @onclick="CloseBeforePicModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showAfterPicModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-4xl mx-4">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h5 class="text-xl font-semibold">Upload Vehicle After Pictures</h5>
+                    <button class="p-1 hover:bg-gray-100 rounded-full" @onclick="CloseAfterPicModal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="sr-only">Choose files</span>
+                            <InputFile OnChange="@OnAfterFileChange" multiple class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#f3b755] file:text-white
+                                hover:file:bg-[#e5a94a]
+                                cursor-pointer" />
+                        </label>
+
+                        @if (afterUploadMessages.Any())
+                        {
+                            <div class="bg-blue-50 text-blue-700 p-4 rounded-lg">
+                                @foreach (var message in afterUploadMessages)
+                                {
+                                    <div class="text-sm">@message</div>
+                                }
+                            </div>
+                        }
+
+                        @if (afterImages.Any())
+                        {
+                            <div class="space-y-2">
+                                <h6 class="font-medium">Uploaded Images:</h6>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    @foreach (var image in afterImages)
+                                    {
+                                        <div class="relative group" @onclick="() => ShowFullImage(image)">
+                                            <img src="@image" 
+                                                 class="w-full h-32 object-cover rounded-lg cursor-pointer" 
+                                                 alt="Vehicle After Picture" />
+                                            <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-25 rounded-lg transition-opacity"></div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="flex justify-end p-4 border-t">
+                    <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors" @onclick="CloseAfterPicModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showVehiclePicModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-md mx-4">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h5 class="text-xl font-semibold">Vehicle Pictures</h5>
+                    <button class="p-1 hover:bg-gray-100 rounded-full" @onclick="CloseVehiclePicModal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <button class="w-full px-4 py-3 bg-[#f3b755] hover:bg-[#e5a94a] text-white rounded-lg transition-colors flex items-center justify-center space-x-2" @onclick="() => OpenBeforeModal()">
+                        <i class="fas fa-camera"></i>
+                        <span>Vehicle Before</span>
+                    </button>
+                    <button class="w-full px-4 py-3 bg-[#f3b755] hover:bg-[#e5a94a] text-white rounded-lg transition-colors flex items-center justify-center space-x-2" @onclick="() => OpenAfterModal()">
+                        <i class="fas fa-camera"></i>
+                        <span>Vehicle After</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showFullImageModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+        <div class="w-full max-w-7xl mx-4">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h5 class="text-xl font-semibold">Full Size Image</h5>
+                    <button class="p-1 hover:bg-gray-100 rounded-full" @onclick="CloseFullImageModal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="relative w-full" style="height: calc(100vh - 200px);">
+                        <img src="@selectedImage" class="w-full h-full object-contain" alt="Full size image" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .image-viewer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .id-image-container {
+        max-width: 400px;
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .id-image-container img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .modal {
+        background-color: rgba(0,0,0,0.5);
+    }
+</style>
+
+@code {
+    private List<ReservationModel> reservationModel = new List<ReservationModel>();
+    private Dictionary<int, string> customerNames = new Dictionary<int, string>();
+    private Dictionary<int, string> customerNumber = new Dictionary<int, string>();
+    private Dictionary<int, string> customerVehicle = new Dictionary<int, string>();
+    private Dictionary<int, string> VehicleSrc = new Dictionary<int, string>();
+    private bool isLoading = true;
+    private string? error;
+    private string searchTerm = "";
+    private string statusFilter = "";
+    private bool showIds = true;
+    private bool showCard = false;
+    
+    // Pagination
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalPages => (int)Math.Ceiling(FilteredReservations.Count() / (double)PageSize);
+    
+    private IEnumerable<ReservationModel> FilteredReservations => reservationModel
+        .Where(r => string.IsNullOrEmpty(searchTerm) || 
+                    (customerNames.ContainsKey(r.UserId) && customerNames[r.UserId].Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                    (customerVehicle.ContainsKey(r.VehicleId) && customerVehicle[r.VehicleId].Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+        .Where(r => string.IsNullOrEmpty(statusFilter) || r.Status == statusFilter);
+    
+    private List<ReservationModel> FilteredPagedReservations => FilteredReservations
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToList();
+
+    private bool showImageModal = false;
+    private List<string> idImages = new();
+    private string uploadsPath;
+
+    private bool showFullImageModal = false;
+    private string selectedImage = string.Empty;
+
+    private bool showVehiclePicModal = false;
+    private bool showBeforePicModal = false;
+    private bool showAfterPicModal = false;
+    private ReservationModel? currentReservation;
+    private List<string> beforeUploadMessages = new();
+    private List<string> afterUploadMessages = new();
+    private List<string> beforeImages = new();
+    private List<string> afterImages = new();
+
+    protected override void OnInitialized()
+    {
+        uploadsPath = Path.Combine(Environment.WebRootPath, "uploads");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+            
+            var reservations = await DbContext.Reservation
+                .OrderByDescending(r => r.StartDate)
+                .ToListAsync();
+
+            var userIds = reservations.Select(r => r.UserId).Distinct().ToList();
+            var vehicleIds = reservations.Select(v => v.VehicleId).Distinct().ToList();
+            
+            var users = await DbContext.Users
+                .Where(u => userIds.Contains(u.UserId))
+                .ToListAsync();
+
+            var vehicles = await DbContext.Vehicles
+                .Where(v => vehicleIds.Contains(v.id))
+                .ToListAsync();
+            
+            customerNames = users.ToDictionary(u => u.UserId, u => $"{u.FirstName} {u.LastName}");
+            customerNumber = users.ToDictionary(u => u.UserId, u => u.Phone ?? string.Empty);
+            customerVehicle = vehicles.ToDictionary(v => v.id, v => v.name);
+            VehicleSrc = vehicles.ToDictionary(v => v.id, v => v.imgsrc);
+            reservationModel = reservations;
+        }
+        catch (Exception ex)
+        {
+            error = "Unable to load reservations. Please try again.";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoading()
+    {
+        await LoadData();
+    }
+    
+    private async Task ConfirmReservation(ReservationModel reservation)
+    {
+        try
+        {
+            reservation.Status = "Confirmed";
+            DbContext.Reservation.Update(reservation);
+
+            // Create confirmation notification
+            var notification = new NotificationModel
+            {
+                UserID = reservation.UserId,
+                Title = "Reservation Confirmed",
+                Content = $"Your reservation for {customerVehicle[reservation.VehicleId]} has been confirmed.",
+                CreatedAt = DateTime.Now,
+                NotifType = "Reservation",
+                IsRead = false
+            };
+            
+            DbContext.Notifications.Add(notification);
+            await DbContext.SaveChangesAsync();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            error = "Failed to confirm reservation. Please try again.";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteReservation(ReservationModel reservation)
+    {
+        try
+        {
+            DbContext.Reservation.Remove(reservation);
+            await DbContext.SaveChangesAsync();
+            reservationModel.Remove(reservation);
+            
+            // Reset to first page if current page becomes empty
+            if (!FilteredPagedReservations.Any() && CurrentPage > 1)
+            {
+                CurrentPage--;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = "Failed to delete reservation. Please try again.";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+    
+    private async Task CancelReservation(ReservationModel reservation)
+    {
+        try
+        {
+            reservation.Status = "Cancelled";
+            DbContext.Reservation.Update(reservation);
+
+            // Create cancellation notification
+            var notification = new NotificationModel
+            {
+                UserID = reservation.UserId,
+                Title = "Reservation Cancelled",
+                Content = $"Your reservation for {customerVehicle[reservation.VehicleId]} has been cancelled.",
+                CreatedAt = DateTime.Now,
+                NotifType = "Reservation",
+                IsRead = false
+            };
+            
+            DbContext.Notifications.Add(notification);
+            await DbContext.SaveChangesAsync();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to cancel reservation: {ex.Message}";
+        }
+    }
+    
+    private void NextPage()
+    {
+        if (CanGoNext)
+        {
+            CurrentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (CanGoBack)
+        {
+            CurrentPage--;
+        }
+    }
+    
+    private bool CanGoNext => CurrentPage < TotalPages;
+    private bool CanGoBack => CurrentPage > 1;
+    
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Confirmed" => "status-confirmed",
+            "Pending" => "status-pending",
+            "Cancelled" => "status-cancelled",
+            _ => "status-default",
+        };
+    }
+    
+    private void ToggleCardContent(bool cardView)
+    {
+        showCard = cardView;
+    }
+
+    private void ViewIDs(ReservationModel reservation)
+    {
+        idImages = new List<string>();
+        var userId = reservation.UserId.ToString();
+        var userPath = Path.Combine(uploadsPath, userId);
+        
+        if (Directory.Exists(userPath))
+        {
+            var imageFiles = Directory.GetFiles(userPath)
+                .Where(f => f.EndsWith(".jpg") || f.EndsWith(".jpeg") || f.EndsWith(".png"))
+                .Select(f => $"/uploads/{userId}/{Path.GetFileName(f)}")
+                .ToList();
+            
+            idImages = imageFiles;
+        }
+        
+        showImageModal = true;
+    }
+
+    private void CloseImageModal()
+    {
+        showImageModal = false;
+        idImages.Clear();
+    }
+
+    private void ShowFullImage(string imagePath)
+    {
+        selectedImage = imagePath;
+        showFullImageModal = true;
+    }
+
+    private void CloseFullImageModal()
+    {
+        showFullImageModal = false;
+        selectedImage = string.Empty;
+    }
+
+    private async Task OpenVehiclePicModal(ReservationModel reservation)
+    {
+        currentReservation = reservation;
+        await LoadVehicleImages(reservation.ReservationId);
+        showVehiclePicModal = true;
+    }
+
+    private void CloseVehiclePicModal()
+    {
+        showVehiclePicModal = false;
+        currentReservation = null;
+    }
+
+    private void OpenBeforeModal()
+    {
+        showVehiclePicModal = false;
+        showBeforePicModal = true;
+    }
+
+    private void CloseBeforePicModal()
+    {
+        showBeforePicModal = false;
+        beforeUploadMessages.Clear();
+        showVehiclePicModal = true;
+    }
+
+    private void OpenAfterModal()
+    {
+        showVehiclePicModal = false;
+        showAfterPicModal = true;
+    }
+
+    private void CloseAfterPicModal()
+    {
+        showAfterPicModal = false;
+        afterUploadMessages.Clear();
+        showVehiclePicModal = true;
+    }
+
+    private async Task LoadVehicleImages(int reservationId)
+    {
+        beforeImages.Clear();
+        afterImages.Clear();
+
+        var beforePath = Path.Combine(Environment.WebRootPath, "uploads_rental_car", reservationId.ToString(), "before");
+        var afterPath = Path.Combine(Environment.WebRootPath, "uploads_rental_car", reservationId.ToString(), "after");
+
+        if (Directory.Exists(beforePath))
+        {
+            var files = Directory.GetFiles(beforePath);
+            foreach (var file in files)
+            {
+                beforeImages.Add($"/uploads_rental_car/{reservationId}/before/{Path.GetFileName(file)}");
+            }
+        }
+
+        if (Directory.Exists(afterPath))
+        {
+            var files = Directory.GetFiles(afterPath);
+            foreach (var file in files)
+            {
+                afterImages.Add($"/uploads_rental_car/{reservationId}/after/{Path.GetFileName(file)}");
+            }
+        }
+    }
+
+    private async Task OnBeforeFileChange(InputFileChangeEventArgs e)
+    {
+        beforeUploadMessages.Clear();
+        var uploadPath = Path.Combine(Environment.WebRootPath, "uploads_rental_car", currentReservation.ReservationId.ToString(), "before");
+        Directory.CreateDirectory(uploadPath);
+
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            var fileName = Path.GetRandomFileName() + Path.GetExtension(file.Name);
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            try
+            {
+                await using FileStream fs = new(filePath, FileMode.Create);
+                await file.OpenReadStream(maxAllowedSize: 10485760).CopyToAsync(fs);
+                beforeUploadMessages.Add($"Uploaded: {file.Name}");
+            }
+            catch (Exception ex)
+            {
+                beforeUploadMessages.Add($"Error uploading {file.Name}: {ex.Message}");
+            }
+        }
+        await LoadVehicleImages(currentReservation.ReservationId);
+    }
+
+    private async Task OnAfterFileChange(InputFileChangeEventArgs e)
+    {
+        afterUploadMessages.Clear();
+        var uploadPath = Path.Combine(Environment.WebRootPath, "uploads_rental_car", currentReservation.ReservationId.ToString(), "after");
+        Directory.CreateDirectory(uploadPath);
+
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            var fileName = Path.GetRandomFileName() + Path.GetExtension(file.Name);
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            try
+            {
+                await using FileStream fs = new(filePath, FileMode.Create);
+                await file.OpenReadStream(maxAllowedSize: 10485760).CopyToAsync(fs);
+                afterUploadMessages.Add($"Uploaded: {file.Name}");
+            }
+            catch (Exception ex)
+            {
+                afterUploadMessages.Add($"Error uploading {file.Name}: {ex.Message}");
+            }
+        }
+        await LoadVehicleImages(currentReservation.ReservationId);
+    }
+}

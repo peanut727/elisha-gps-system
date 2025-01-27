@@ -1,0 +1,96 @@
+@page "/ReservationSuccess"
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-5">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all animate-slide-up">
+        <div class="p-10 text-center">
+            <div class="flex justify-center items-center mb-8">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-green-50 rounded-full animate-pulse" style="transform: scale(1.3)"></div>
+                    <img src="Images/reserved.png" alt="Reservation Success" class="relative w-24 h-24 z-10 animate-bounce-in"/>
+                </div>
+            </div>
+            <div class="space-y-4 mb-8">
+                <h1 class="text-3xl font-bold text-green-700">Reservation Successful!</h1>
+                <p class="text-gray-600 text-lg">Your vehicle has been successfully reserved. We look forward to serving you!</p>
+            </div>
+            <div class="mb-8 animate-fade-in">
+                <div class="relative w-16 h-16 mx-auto mb-4">
+                    <div class="absolute inset-0 rounded-full" style="background: conic-gradient(#16a34a @(seconds * 20)%, #e5e7eb @(seconds * 20)%)">
+                        <div class="absolute inset-1.5 bg-white rounded-full flex items-center justify-center">
+                            <span class="text-xl font-semibold text-gray-700">@seconds</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-500">Redirecting to home page...</p>
+            </div>
+            <button @onclick="@(() => Navigation.NavigateTo("/", forceLoad: true))" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-full transition-colors duration-200 animate-fade-in">
+                Return to Home
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@keyframes slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @@keyframes bounce-in {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    @@keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .animate-slide-up { animation: slide-up 0.5s ease-out; }
+    .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
+    .animate-pulse { animation: pulse 2s infinite; }
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+@code {
+    private int seconds = 5;
+    private System.Timers.Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += CountdownTimer;
+        timer.Start();
+    }
+
+    private void CountdownTimer(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            seconds--;
+            
+            if (seconds <= 0)
+            {
+                timer?.Stop();
+                timer?.Dispose();
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        timer?.Stop();
+        timer?.Dispose();
+    }
+}

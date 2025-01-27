@@ -1,0 +1,520 @@
+﻿@rendermode InteractiveServer
+@inherits LayoutComponentBase
+@using System.Security.Claims
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@using Microsoft.EntityFrameworkCore
+@using BCrypt.Net
+@using elisha_gps_reservation_system.Components.Pages
+@implements IAsyncDisposable
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            DEFAULT: '#e39a3c',
+            50: '#fdf8f1',
+            100: '#fbecd9',
+            200: '#f6d4a8',
+            300: '#f0b671',
+            400: '#e39a3c',
+            500: '#d78023',
+            600: '#bc651b',
+            700: '#9c4f19',
+            800: '#7e401b',
+            900: '#673519',
+          },
+        }
+      }
+    }
+  }
+</script>
+
+<div class="top-row px-4">
+    <div class="brand">
+        <img src="Images/logo.png" @onclick="navtohome" alt="Elisha's Logo" />
+        <p class="name">Elisha's Motorcycle Rental Bulacan</p>
+        <button class="mobile-menu-btn" @onclick="ToggleMobileMenu">
+            <i class="fas @(_isMobileMenuOpen ? "fa-times" : "fa-bars")"></i>
+        </button>
+    </div>
+    
+    <div class="left-items @(_isMobileMenuOpen ? "show" : "")">
+        <a href="home" class="@(_currentPage == "home" ? "active" : "")" @onclick="CloseMobileMenu">
+            <i class="fas fa-home"></i> Home
+        </a>
+        <a href="vehicles" class="@(_currentPage == "vehicles" ? "active" : "")" @onclick="CloseMobileMenu">
+            <i class="fas fa-motorcycle"></i> Vehicles
+        </a>
+        <AuthorizeView>
+            <Authorized>
+                <a href="reservation-history" class="@(_currentPage == "reservation-history" ? "active" : "")" @onclick="CloseMobileMenu">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                 <a href="messages" class="@(_currentPage == "messages" ? "active" : "")" @onclick="CloseMobileMenu">
+                    <i class="fas fa-history"></i> Messages
+                </a>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+    
+    <AuthorizeView>
+        <NotAuthorized>
+            <div class="right-items">
+                <a href="/login" @onclick="CloseMobileMenu">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </a>
+            </div>
+        </NotAuthorized>
+        <Authorized>
+            <div class="right-items-authorized">
+                <div class="notification-container">
+                    <i class="fas fa-bell" @onclick="ToggleNotifications"></i>
+                    @if (UnreadNotificationsCount > 0)
+                    {
+                        <span class="notification-badge">@UnreadNotificationsCount</span>
+                    }
+                    <div class="notification-dropdown @(_isNotificationDropdownOpen ? "show" : "")">
+                        <div class="notification-header">
+                            <h4>Notifications</h4>
+                            @if (Notifications.Any())
+                            {
+                                <button class="mark-all-read" @onclick="MarkAllAsRead">
+                                    Mark all as read
+                                </button>
+                            }
+                        </div>
+                        <div class="notification-list">
+                            @if (!Notifications.Any())
+                            {
+                                <div class="no-notifications">
+                                    No notifications
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var notification in Notifications)
+                                {
+                                    <div class="notification-item @(!notification.IsRead ? "unread" : "")" @onclick="() => HandleNotificationClick(notification)">
+                                        <div class="notification-content">
+                                            <div class="notification-title">@notification.Title</div>
+                                            <div class="notification-message">@notification.Content</div>
+                                            <div class="notification-time">@notification.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm")</div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="fixed bottom-6 right-6 z-50">
+                    <button @onclick="ToggleMessageModal" class="bg-primary-500 hover:bg-primary-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 relative">
+                        <i class="fas fa-comments text-2xl"></i>
+                        @if (unreadMessages > 0)
+                        {
+                            <div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                @(unreadMessages > 99 ? "99+" : unreadMessages)
+                            </div>
+                        }
+                    </button>
+                </div>
+                <i class="fas fa-user" @onclick="ToggleDropdown"></i>
+                <div class="dropdown @(_isDropdownOpen ? "show" : "")">
+                    <a href="javascript:void(0)" @onclick="() => { OpenPasswordModal(); CloseDropdown(); }">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a @onclick="Logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@if (isMessageModalOpen)
+{
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-[999] transition-opacity duration-300"
+         @onclick="ToggleMessageModal">
+    </div>
+    
+    <div class="fixed bottom-0 right-0 mb-6 mr-6 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl z-[1000] overflow-hidden transition-all duration-300 transform @(isMessageModalOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0") sm:w-[350px] md:w-[400px]">
+        <div class="relative h-full">
+            <Messages @bind-IsModalView="isMessageModalOpen" />
+        </div>
+    </div>
+}
+
+@if (_showPasswordModal)
+{
+    <div class="modal-backdrop" @onclick="@(() => ClosePasswordModal())"></div>
+    <div class="modal" @onclick:stopPropagation="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="close-btn" @onclick="ClosePasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" @bind="_currentPassword" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" @bind="_newPassword" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" @bind="_confirmPassword" class="form-control" />
+                </div>
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger">@_errorMessage</div>
+                }
+                @if (!string.IsNullOrEmpty(_successMessage))
+                {
+                    <div class="alert alert-success">@_successMessage</div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="ClosePasswordModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="ChangePassword">Save Changes</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+    private string? _currentPage;
+    private bool _isDropdownOpen = false;
+    private bool _isMobileMenuOpen = false;
+    private bool _showPasswordModal = false;
+    private string _currentPassword = "";
+    private string _newPassword = "";
+    private string _confirmPassword = "";
+    private string _errorMessage = "";
+    private string _successMessage = "";
+    private int? _currentUserId = null;
+    
+    // Notification related properties
+    private bool _isNotificationDropdownOpen = false;
+    private List<NotificationModel> Notifications = new();
+    private int UnreadNotificationsCount = 0;
+    private CancellationTokenSource? _refreshCancellation;
+
+    private bool isMessageModalOpen = false;
+    private int unreadMessages = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.LocationChanged += async (s, e) => await LocationChanged(s, e);
+        _currentPage = Navigation.Uri.Split('/').Last();
+        
+        try
+        {
+            var user = HttpContextAccessor.HttpContext?.User;
+            if (user != null)
+            {
+                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
+                if (userId != "Anonymous")
+                {
+                    _currentUserId = int.Parse(userId);
+                    
+                    // Verify user in database
+                    await using var context = await DbContextFactory.CreateDbContextAsync();
+                    var dbUser = await context.Users.FindAsync(_currentUserId);
+                    if (dbUser == null)
+                    {
+                        Console.WriteLine("User not found in database");
+                        return;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
+        }
+        
+        await LoadNotifications();
+        StartPeriodicRefresh();
+    }
+
+    private void StartPeriodicRefresh()
+    {
+        _refreshCancellation = new CancellationTokenSource();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!_refreshCancellation.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), _refreshCancellation.Token);
+                    if (!_refreshCancellation.Token.IsCancellationRequested)
+                    {
+                        await InvokeAsync(async () =>
+                        {
+                            await LoadNotifications();
+                            StateHasChanged();
+                        });
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal cancellation, ignore
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in periodic refresh: {ex.Message}");
+            }
+        }, _refreshCancellation.Token);
+    }
+
+    private async Task LoadNotifications()
+    {
+        if (!_currentUserId.HasValue) return;
+
+        try
+        {
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            var notifications = await context.Notifications
+                .Where(n => n.UserID == _currentUserId.Value)
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(10)
+                .ToListAsync();
+            
+            Notifications = notifications;
+            UnreadNotificationsCount = notifications.Count(n => !n.IsRead);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading notifications: {ex.Message}");
+        }
+    }
+
+    private async Task LocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        try
+        {
+            SetCurrentPage(e.Location);
+            await LoadNotifications();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in LocationChanged: {ex.Message}");
+        }
+    }
+
+    private async Task HandleNotificationClick(NotificationModel notification)
+    {
+        if (!notification.IsRead)
+        {
+            try
+            {
+                await using var context = await DbContextFactory.CreateDbContextAsync();
+                var dbNotification = await context.Notifications.FindAsync(notification.NotificationID);
+                if (dbNotification != null)
+                {
+                    dbNotification.IsRead = true;
+                    await context.SaveChangesAsync();
+                    notification.IsRead = true;
+                    UnreadNotificationsCount = Math.Max(0, UnreadNotificationsCount - 1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking notification as read: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        try
+        {
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            var unreadNotifications = await context.Notifications
+                .Where(n => n.UserID == _currentUserId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in unreadNotifications)
+            {
+                notification.IsRead = true;
+            }
+
+            await context.SaveChangesAsync();
+
+            // Update the local notifications
+            foreach (var notification in Notifications)
+            {
+                notification.IsRead = true;
+            }
+            UnreadNotificationsCount = 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error marking all notifications as read: {ex.Message}");
+        }
+    }
+
+    private void ToggleDropdown()
+    {
+        _isDropdownOpen = !_isDropdownOpen;
+    }
+
+    private void ToggleMobileMenu()
+    {
+        _isMobileMenuOpen = !_isMobileMenuOpen;
+        if (_isMobileMenuOpen) _isDropdownOpen = false;
+    }
+
+    private void CloseMobileMenu()
+    {
+        _isMobileMenuOpen = false;
+    }
+
+    private void CloseDropdown()
+    {
+        _isDropdownOpen = false;
+    }
+
+    private async Task Logout()
+    {
+        Navigation.NavigateTo("/logout"); 
+    }
+
+    private void navtohome()
+    {
+        Navigation.NavigateTo("/home");
+    }
+
+    private void OpenPasswordModal()
+    {
+        _showPasswordModal = true;
+        _isDropdownOpen = false;
+        ResetPasswordForm();
+    }
+
+    private void ClosePasswordModal()
+    {
+        _showPasswordModal = false;
+        ResetPasswordForm();
+    }
+
+    private void ResetPasswordForm()
+    {
+        _currentPassword = "";
+        _newPassword = "";
+        _confirmPassword = "";
+        _errorMessage = "";
+        _successMessage = "";
+    }
+
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrEmpty(_currentPassword) || string.IsNullOrEmpty(_newPassword) || string.IsNullOrEmpty(_confirmPassword))
+        {
+            _errorMessage = "Please fill in all fields.";
+            return;
+        }
+
+        if (_newPassword != _confirmPassword)
+        {
+            _errorMessage = "New passwords do not match.";
+            return;
+        }
+
+        if (_newPassword.Length < 6)
+        {
+            _errorMessage = "New password must be at least 6 characters long.";
+            return;
+        }
+
+        try
+        {
+            var userId = HttpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                _errorMessage = "User not found.";
+                return;
+            }
+
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            var user = await context.Users.FindAsync(int.Parse(userId));
+            if (user == null)
+            {
+                _errorMessage = "User not found.";
+                return;
+            }
+
+            // Verify the current password using BCrypt
+            if (!BCrypt.Verify(_currentPassword, user.PasswordHash))
+            {
+                _errorMessage = "Current password is incorrect.";
+                return;
+            }
+
+            // Hash the new password using BCrypt
+            string newPasswordHash = BCrypt.HashPassword(_newPassword);
+            user.PasswordHash = newPasswordHash;
+            await context.SaveChangesAsync();
+
+            _successMessage = "Password changed successfully!";
+            await Task.Delay(2000); // Show success message for 2 seconds
+            ClosePasswordModal();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "An error occurred while changing the password.";
+            Console.WriteLine($"Error changing password: {ex.Message}");
+        }
+    }
+
+    private void ToggleNotifications()
+    {
+        _isNotificationDropdownOpen = !_isNotificationDropdownOpen;
+        Console.WriteLine($"Notification dropdown toggled: {_isNotificationDropdownOpen}");
+        if (_isDropdownOpen) _isDropdownOpen = false;
+    }
+
+    private void ToggleMessageModal()
+    {
+        isMessageModalOpen = !isMessageModalOpen;
+        if (_isDropdownOpen) _isDropdownOpen = false;
+        if (_isNotificationDropdownOpen) _isNotificationDropdownOpen = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_refreshCancellation != null)
+        {
+            await _refreshCancellation.CancelAsync();
+            await Task.Delay(100); // Give time for the refresh task to complete
+            _refreshCancellation.Dispose();
+        }
+        Navigation.LocationChanged -= async (s, e) => await LocationChanged(s, e);
+    }
+
+    private void OnClickOutside()
+    {
+        _isNotificationDropdownOpen = false;
+        _isDropdownOpen = false;
+    }
+
+    private void SetCurrentPage(string uri)
+    {
+        var segment = new Uri(uri).Segments.LastOrDefault()?.TrimEnd('/') ?? string.Empty;
+        _currentPage = segment.ToLower() == string.Empty ? "home" : segment;
+        StateHasChanged();
+    }
+}

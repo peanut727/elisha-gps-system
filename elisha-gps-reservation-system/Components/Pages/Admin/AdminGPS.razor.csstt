@@ -1,0 +1,829 @@
+﻿.gps-dashboard {
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding: 1rem;
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: auto;
+    min-height: calc(100vh - 4rem);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    margin-bottom: 20px;
+    margin-top: -30px;
+    gap: 1rem;
+}
+
+.speed-stats, .location-stats {
+    display: flex;
+    flex: 1;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(244, 181, 84, 0.05);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(244, 181, 84, 0.1);
+    min-width: 0;
+    gap: 1rem;
+}
+
+.speed-item, .location-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0 1rem;
+}
+
+.speed-label, .location-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.speed-value, .location-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.speed-value .value, .location-value .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #F4B554;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.speed-value .unit {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.toggle-vehicles-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-indicator.active .status-dot {
+    background: #F4B554;
+    box-shadow: 0 0 0 4px rgba(244, 181, 84, 0.2);
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.inactive .status-dot {
+    background: #dc3545;
+}
+
+.status-text {
+    font-size: 0.9rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+.dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    height: auto;
+    min-height: calc(100vh - 120px);
+}
+
+.map-section {
+    position: relative;
+    height: 600px;
+    width: 100%;
+}
+
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.coordinates-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    gap: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.coordinates-bar .coordinate {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 150px;
+}
+
+.coordinates-bar .label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coordinates-bar .value {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #F4B554;
+}
+
+.info-section {
+    padding: 0.5rem 0;
+    width: 100%;
+}
+
+.incident-section {
+    width: 400px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    min-height: 0;
+}
+
+.incident-section .info-cards {
+    margin: 0;
+}
+
+.incident-section .info-card {
+    width: 100%;
+    margin: 0;
+    min-height: auto;
+}
+
+.info-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    min-height: 140px;
+}
+
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.location-card .card-icon {
+    background: #e8f5e9;
+}
+
+.speed-card .card-icon {
+    background: #e3f2fd;
+}
+
+.incident-card .card-icon {
+    background: #eceff1;
+}
+
+.card-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card-content h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #666;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.speed-stats {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.speed-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.speed-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.speed-item.current {
+    text-align: center;
+    width: 100%;
+}
+
+.speed-item.current .speed-value {
+    font-size: 2rem;
+    color: #F4B554;
+    font-weight: 700;
+}
+
+.speed-item.current .speed-value .unit {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+}
+
+.speed-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.speed-value .value {
+    font-weight: 600;
+}
+
+.speed-value .unit {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.incident-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+}
+
+.incident-stats .count {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #444;
+    line-height: 1;
+}
+
+.incident-stats .label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.last-incident {
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.incident-log {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    max-height: 400px;
+}
+
+.incident-log h3 {
+    margin: 0 0 0.75rem 0;
+    flex-shrink: 0;
+}
+
+.log-entries {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    scroll-behavior: smooth;
+    min-height: 0;
+}
+
+.log-entry {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem;
+    margin-bottom: 0;
+    border-radius: 6px;
+    background: #f8f9fa;
+    transition: transform 0.2s;
+    font-size: 0.9rem;
+}
+
+.log-entry:last-child {
+    margin-bottom: 0;
+}
+
+.log-entry:hover {
+    transform: translateX(5px);
+}
+
+.log-entry.braking {
+    border-left: 4px solid #ff4444;
+}
+
+.log-entry.acceleration {
+    border-left: 4px solid #ff8800;
+}
+
+.log-entry.overspeeding {
+    border-left: 4px solid #E91E63;
+}
+
+.log-time {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #666;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.log-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    margin: 0 0.5rem;
+    font-size: 1rem;
+}
+
+.log-entry.braking .log-icon {
+    background-color: #ffebee;
+}
+
+.log-entry.acceleration .log-icon {
+    background-color: #fff3e0;
+}
+
+.log-entry.overspeeding .log-icon {
+    background-color: #fce4ec;
+}
+
+.log-icon i {
+    font-size: 1rem;
+}
+
+.log-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.log-details {
+    font-size: 0.8rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.last-incident {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.incident-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.incident-stats .count {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.incident-stats .label {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.coordinates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.coordinate {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.coordinate .label {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coordinate .value {
+    font-family: monospace;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #F4B554;
+}
+
+.toggle-vehicles-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.vehicles-sidebar {
+    width: 300px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-right: 1rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, width 0.3s ease;
+}
+
+.vehicles-sidebar:not(.show) {
+    width: 0;
+    margin-right: 0;
+}
+
+.vehicles-list {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 300px;
+}
+
+.vehicles-list h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 1rem 0;
+}
+
+.vehicle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vehicle-item:hover {
+    background: #e9ecef;
+}
+
+.vehicle-item.selected {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+}
+
+.vehicle-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.vehicle-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+}
+
+.vehicle-status.active {
+    background: #4caf50;
+}
+
+.vehicle-status.inactive {
+    background: #9e9e9e;
+}
+
+.mileage-stats {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin: 0.5rem;
+}
+
+.mileage-item {
+    flex: 1;
+    min-width: 120px;
+}
+
+.mileage-progress {
+    flex: 2;
+    min-width: 200px;
+}
+
+.mileage-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 0.25rem;
+}
+
+.mileage-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+
+.mileage-value .value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.mileage-value .unit {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.progress {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00B14F, #00D15F);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.location-stats {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.location-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.location-label {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.location-value {
+    font-family: monospace;
+}
+
+.mileage-text {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.mini-progress {
+    height: 3px;
+    margin-top: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mini-progress .progress-bar {
+    height: 100%;
+    background: #F4B554;
+    transition: width 0.3s ease;
+}
+
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.control-button {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.control-button:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.control-button i {
+    font-size: 1rem;
+}
+
+/* Scrollbar styling */
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes flash {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+    .gps-dashboard {
+        padding: 2rem;
+    }
+
+    .dashboard-container {
+        flex-direction: row;
+    }
+
+    .info-cards {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .map-section {
+        height: 60vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .dashboard-content {
+        grid-template-columns: 1fr 350px;
+    }
+
+    .map-section {
+        height: calc(100vh - 150px);
+    }
+}
+
+@media (max-width: 480px) {
+    .status-indicator {
+        width: 100%;
+        margin-top: 0.5rem;
+        justify-content: center;
+    }
+
+    .speed-stats {
+        flex-direction: column;
+    }
+
+    .speed-row {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .vehicles-sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        z-index: 1000;
+        transform: translateX(-100%);
+        margin-right: 0;
+    }
+
+    .vehicles-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .toggle-vehicles-btn {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 1001;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+}

@@ -1,0 +1,159 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = elisha-gps-reservation-system
+build_property.RootNamespace = elisha-gps-reservation-system
+build_property.ProjectDir = /home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system
+build_property._RazorSourceGeneratorDebug = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/App.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/About.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BYm91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Account/Signup.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L1NpZ251cC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/AddCar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9BZGRDYXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/AdminChat.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9BZG1pbkNoYXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/AdminGPS.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9BZG1pbkdQUy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/AdminReservation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9BZG1pblJlc2VydmF0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/Customers.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9DdXN0b21lcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/ManageReservations.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9NYW5hZ2VSZXNlcnZhdGlvbnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/RemoveVehicle.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9SZW1vdmVWZWhpY2xlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/ContactUs.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0VXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Error.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Geolocation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9HZW9sb2NhdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Messages.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NZXNzYWdlcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Reservation-Success.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZXNlcnZhdGlvbi1TdWNjZXNzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/ReservationHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZXNlcnZhdGlvbkhpc3RvcnkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Routes.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9fSW1wb3J0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/DynamicCalendar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvRHluYW1pY0NhbGVuZGFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-g8acunqr0s
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvRW1wdHlMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-jil2izttzv
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-t9il859rqs
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/MainLayoutNoFooter.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dE5vRm9vdGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-sboxly5lnc
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/NavAdmin.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2QWRtaW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-rbncm9qcxv
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2TWVudS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-kj8jrwlv9r
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Layout/Topbar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvVG9wYmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-cb4n4l4g4l
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Account/AccessDenied.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L0FjY2Vzc0RlbmllZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-rpsmwvm77m
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Account/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L0xvZ2luLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-44133285ni
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Account/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L0xvZ291dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-n46vkau4f3
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/AdminCalendar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9BZG1pbkNhbGVuZGFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-jqs57dbk2s
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Admin/SettingsAdmin.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZG1pbi9TZXR0aW5nc0FkbWluLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-nosoosfdoe
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/CarDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DYXJEZXRhaWxzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-6undvny6jp
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9JbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-ydcfdl6n3j
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/Reservation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZXNlcnZhdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-ydkdbnmy79
+
+[/home/peanut/Downloads/ELISHATESTING/elisha-gps-system/elisha-gps-reservation-system/Components/Pages/VehicleList.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9WZWhpY2xlTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-eqjx25xxt6

@@ -1,0 +1,122 @@
+.success-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fff9eb 0%, #fff3d6 100%);
+    padding: 20px;
+}
+
+.success-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+    animation: slideUp 0.5s ease-out;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.success-content {
+    padding: 40px;
+    text-align: center;
+}
+
+.success-icon {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.success-icon img {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 6px rgba(248, 165, 50, 0.2));
+    animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.success-message {
+    margin-bottom: 30px;
+}
+
+.success-message h1 {
+    color: #0f172a;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+}
+
+.success-message .message {
+    color: #64748b;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.success-message .countdown {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-style: italic;
+    margin-top: 8px;
+    opacity: 0.9;
+}
+
+.home-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #f8a532, #F4B554);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 6px rgba(248, 165, 50, 0.2);
+}
+
+.home-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(248, 165, 50, 0.3);
+    background: linear-gradient(135deg, #f89b1a, #f3a83c);
+}
+
+.home-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(248, 165, 50, 0.2);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.1);
+    }
+    80% {
+        opacity: 1;
+        transform: scale(0.89);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

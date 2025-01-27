@@ -1,0 +1,380 @@
+@page "/adminDashboard"
+@inject ApplicationDbContext DbContext
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+
+<div class="font-jakarta min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Dashboard Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <div class="flex items-center space-x-4">
+                <div class="relative inline-flex items-center">
+                    <select value="@dateFilter" 
+                            @onchange="@(async e => await OnDateFilterChanged(e))"
+                            class="appearance-none min-w-[160px] pl-10 pr-8 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Rentals -->
+            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-[#e39a3c] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Rentals</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@_totalReservations</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Rentals -->
+            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                        <i class="fas fa-motorcycle text-[#e39a3c] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Active Rentals</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@_activeRentals</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Revenue -->
+            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-[#e39a3c] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Revenue</p>
+                        <h3 class="text-2xl font-bold text-gray-900">₱@_totalRevenue.ToString("N2")</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Availability -->
+            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                        <i class="fas fa-car text-[#e39a3c] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Vehicle Availability</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@_availableVehicles/@_totalVehicles</h3>
+                        <p class="text-sm mt-1 flex items-center">
+                            <i class="fas fa-circle mr-1 @(_availabilityChangePositive ? "text-green-500" : "text-yellow-500")"></i>
+                            <span class="@(_availabilityChangePositive ? "text-green-600" : "text-yellow-600")">
+                                @(_availabilityChangePositive ? "Good Availability" : "Limited Availability")
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Types -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                    <i class="fas fa-car-side text-[#e39a3c] text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Vehicle Types</h2>
+                    <p class="text-sm text-gray-500">Distribution of vehicle categories</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                @foreach (var type in _vehicleTypeDistribution)
+                {
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-sm font-medium text-gray-600">@type.Key</p>
+                        <p class="text-lg font-bold text-[#e39a3c]">@type.Value</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-gray-200 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-history text-[#e39a3c] mr-2"></i> Recent Activity
+                    </h2>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                        <div class="relative">
+                            <input type="text" 
+                                   placeholder="Search rentals..." 
+                                   @bind="searchTerm" 
+                                   @bind:event="oninput"
+                                   class="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <select @bind="statusFilter" 
+                                @bind:event="onchange"
+                                class="w-full sm:w-auto pl-4 pr-8 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400">
+                            <option value="">All Status</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-hidden">
+                @if (!filteredReservations.Any())
+                {
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>No recent activity</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="divide-y divide-gray-200">
+                        @foreach (var reservation in filteredReservations)
+                        {
+                            var vehicle = GetVehicle(reservation.VehicleId);
+                            if (vehicle != null)
+                            {
+                                <div class="p-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                                     @onclick="() => SelectReservation(reservation)">
+                                    <div class="flex items-center space-x-4">
+                                        <img src="@(string.IsNullOrEmpty(vehicle.imgsrc) ? "Images/default-vehicle.png" : vehicle.imgsrc)"
+                                             class="w-16 h-16 rounded-lg object-cover" alt="@vehicle.type" />
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <h3 class="text-sm font-medium text-gray-900 truncate">@vehicle.name @vehicle.type</h3>
+                                                <span class="px-3 py-1 text-xs font-medium rounded-full
+                                                           @(reservation.Status.ToLower() switch {
+                                                               "confirmed" => "bg-green-100 text-green-800",
+                                                               "pending" => "bg-yellow-100 text-yellow-800",
+                                                               "completed" => "bg-blue-100 text-blue-800",
+                                                               _ => "bg-gray-100 text-gray-800"
+                                                           })">
+                                                    @reservation.Status
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                <span class="flex items-center">
+                                                    <i class="far fa-calendar-alt mr-1"></i>
+                                                    @reservation.StartDate.ToString("MMM dd, yyyy")
+                                                    <span class="ml-1 text-gray-400">(@GetTimeAgo(reservation.StartDate))</span>
+                                                </span>
+                                                <span class="flex items-center">
+                                                    <i class="far fa-clock mr-1"></i>
+                                                    @((reservation.EndDate - reservation.StartDate).Days) days
+                                                </span>
+                                                <span class="font-medium text-[#e39a3c]">₱@reservation.TotalAmount.ToString("N2")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ReservationModel> recentReservations = new();
+    private List<ReservationModel> filteredReservations = new();
+    private List<Vehicle> vehicles = new();
+    private string _searchTerm = "";
+    private string _statusFilter = "";
+    private string dateFilter = "month";
+    private int _totalReservations;
+    private int _activeRentals;
+    private decimal _totalRevenue;
+    private int _vehicleTypes;
+    private Dictionary<string, int> _vehicleTypeDistribution = new();
+    private ReservationModel selectedReservation;
+    private int _totalVehicles;
+    private int _availableVehicles;
+    private bool _availabilityChangePositive;
+
+    private string searchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            _searchTerm = value;
+            ApplyFilters();
+        }
+    }
+
+    private string statusFilter
+    {
+        get => _statusFilter;
+        set
+        {
+            _statusFilter = value;
+            ApplyFilters();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredReservations = recentReservations;
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            filteredReservations = filteredReservations
+                .Where(r => {
+                    var vehicle = GetVehicle(r.VehicleId);
+                    return (vehicle?.type?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                           r.Status.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase);
+                })
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_statusFilter))
+        {
+            filteredReservations = filteredReservations
+                .Where(r => r.Status.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatistics();
+        await LoadVehicleTypes();
+    }
+
+    private async Task LoadStatistics()
+    {
+        var startDate = GetFilterStartDate();
+        var endDate = DateTime.Now;
+
+        _totalReservations = await DbContext.Reservation
+            .Where(r => r.StartDate >= startDate && r.StartDate <= endDate)
+            .CountAsync();
+
+        _activeRentals = await DbContext.Reservation
+            .CountAsync(r => r.Status == "Confirmed" && 
+                           r.StartDate >= startDate && 
+                           r.EndDate >= DateTime.Now);
+
+        _totalRevenue = await DbContext.Reservation
+            .Where(r => r.Status == "Completed" && 
+                       r.StartDate >= startDate && 
+                       r.StartDate <= endDate)
+            .SumAsync(r => r.TotalAmount);
+            
+        // Calculate vehicle availability
+        _totalVehicles = await DbContext.Vehicles.CountAsync();
+        var currentTime = DateTime.Now;
+        _availableVehicles = await DbContext.Vehicles
+            .CountAsync(v => !DbContext.Reservation
+                .Any(r => r.VehicleId == v.id && 
+                         r.Status == "Confirmed" && 
+                         currentTime >= r.StartDate && 
+                         currentTime <= r.EndDate));
+        _availabilityChangePositive = _availableVehicles > (_totalVehicles / 2);
+
+        await LoadReservations();
+    }
+
+    private async Task LoadReservations()
+    {
+        var startDate = GetFilterStartDate();
+        var endDate = DateTime.Now;
+
+        recentReservations = await DbContext.Reservation
+            .Where(r => r.StartDate >= startDate && r.StartDate <= endDate)
+            .OrderByDescending(r => r.StartDate)
+            .Take(20)
+            .ToListAsync();
+
+        var vehicleIds = recentReservations.Select(r => r.VehicleId).Distinct();
+        vehicles = await DbContext.Vehicles
+            .Where(v => vehicleIds.Contains(v.id))
+            .ToListAsync();
+
+        filteredReservations = recentReservations;
+    }
+
+    private async Task LoadVehicleTypes()
+    {
+        var types = await DbContext.Vehicles
+            .GroupBy(v => v.type)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        _vehicleTypes = types.Count;
+        _vehicleTypeDistribution = types.ToDictionary(x => x.Type, x => x.Count);
+    }
+
+    private Vehicle GetVehicle(int vehicleId)
+    {
+        return vehicles.FirstOrDefault(v => v.id == vehicleId);
+    }
+
+    private void SelectReservation(ReservationModel reservation)
+    {
+        selectedReservation = reservation;
+        // TODO: Implement reservation details view
+    }
+
+    private DateTime GetFilterStartDate()
+    {
+        var currentDate = DateTime.Now;
+        return dateFilter switch
+        {
+            "today" => currentDate.Date,
+            "week" => currentDate.AddDays(-7),
+            "month" => currentDate.AddMonths(-1),
+            "year" => currentDate.AddYears(-1),
+            _ => currentDate.AddMonths(-1) // Default to last month
+        };
+    }
+
+    private async Task OnDateFilterChanged(ChangeEventArgs e)
+    {
+        dateFilter = e.Value.ToString();
+        await LoadStatistics();
+        StateHasChanged();
+    }
+
+    private string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.Now - date;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalHours < 1)
+            return $"{(int)timeSpan.TotalMinutes} minutes ago";
+        if (timeSpan.TotalDays < 1)
+            return $"{(int)timeSpan.TotalHours} hours ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays} days ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)(timeSpan.TotalDays / 7)} weeks ago";
+        if (timeSpan.TotalDays < 365)
+            return $"{(int)(timeSpan.TotalDays / 30)} months ago";
+        
+        return $"{(int)(timeSpan.TotalDays / 365)} years ago";
+    }
+}

@@ -1,0 +1,136 @@
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<div class="page">
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <div class="sidebar">
+                <NavAdmin />
+            </div>
+            <main>
+                <div class="content">
+                    @Body
+                </div>
+            </main>
+        </Authorized>
+        <NotAuthorized>
+            <main>
+                <Topbar />
+                <div class="content">
+                    @Body
+                </div>
+            </main>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+    </Authorized>
+    <NotAuthorized>
+        <footer class="bg-gray-900 text-gray-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Company Info Section -->
+                <div class="space-y-6 lg:col-span-2">
+                    <div class="flex items-center space-x-4">
+                        <img src="Images/logo.png" alt="ElishaLogo" class="h-12 w-auto">
+                        <h4 class="text-lg font-semibold text-white">Elisha's Motorcycle Rental Bulacan</h4>
+                    </div>
+                    <p class="text-gray-400">Unleash your spirit, hit the road, and make memories with our unmatched motorcycle rentals. Your adventure starts now!</p>
+                    <div class="space-y-4">
+                        <a href="https://maps.google.com" target="_blank" 
+                           class="flex items-center space-x-3 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                            <i class="fas fa-map-marker-alt text-[#f3b755]"></i>
+                            <span>0912 Paso, Bagbaguin, Santa Maria, Philippines</span>
+                        </a>
+                        <a href="tel:+639082269956" 
+                           class="flex items-center space-x-3 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                            <i class="fas fa-phone text-[#f3b755]"></i>
+                            <span>+63 908 226 9956</span>
+                        </a>
+                        <a href="mailto:contact@elishamotorcycle.com" 
+                           class="flex items-center space-x-3 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                            <i class="fas fa-envelope text-[#f3b755]"></i>
+                            <span>contact@elishamotorcycle.com</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links Section -->
+                <div class="space-y-6">
+                    <h4 class="text-lg font-semibold text-white">Quick Links</h4>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="/" class="flex items-center space-x-2 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                                <span>Home</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/about" class="flex items-center space-x-2 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                                <span>About Us</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/vehicles" class="flex items-center space-x-2 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                                <span>Vehicles</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/contact" class="flex items-center space-x-2 text-gray-400 hover:text-[#f3b755] transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                                <span>Contact</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Social Links & Newsletter Section -->
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-4">Connect With Us</h4>
+                        <p class="text-gray-400 mb-4">Follow us on social media for updates, promotions, and motorcycle community news!</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#f3b755] hover:text-white transition-all duration-300">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#f3b755] hover:text-white transition-all duration-300">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#f3b755] hover:text-white transition-all duration-300">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#f3b755] hover:text-white transition-all duration-300">
+                                <i class="fab fa-discord"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-white">Newsletter</h4>
+                        <p class="text-gray-400">Subscribe for updates and special offers!</p>
+                        <div class="flex">
+                            <input type="email" 
+                                   placeholder="Enter your email" 
+                                   class="flex-1 px-4 py-2 bg-gray-800 text-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-[#f3b755]">
+                            <button type="button" 
+                                    class="px-4 py-2 bg-[#f3b755] text-white rounded-r-md hover:bg-[#e39a3c] focus:outline-none focus:ring-2 focus:ring-[#f3b755] focus:ring-offset-2 focus:ring-offset-gray-900">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright Section -->
+            <div class="border-t border-gray-800">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+                    <p>&copy; @DateTime.Now.Year Elisha's Motorcycle Rental. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </NotAuthorized>
+</AuthorizeView>
